@@ -10,7 +10,7 @@ let doctors = [ /* default doctor list kept below (trimmed in this file preview)
 const credentials = {
     "ANISH": { password: "HARHARMAHADEV", role: "admin", name: "Administrator" },
     "SHARAN": { password: "8892970383", role: "SHARAN", name: "User One" },
-    "MANU": { password: "9947502699", role: "MANU", name: "User Two" },
+    "MANU": { password: "9947502699", role: "admin", name: "Administrator" },
     "SUDHAKAR": { password: "8309205985", role: "SUDHAKAR", name: "User Three" },
     "ADAM": { password: "8073507830", role: "ADAM", name: "User FOUR" },
     "APARNA": { password: "7483912387", role: "APARNA", name: "Technician" }
