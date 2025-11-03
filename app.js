@@ -746,9 +746,9 @@ async function clearAllLogs() {
 }
 
 async function resetHNumberCounter() {
-    if (!confirm('Reset H-number counter to 1247?')) return;
+    if (!confirm('Reset H-number counter to 1312?')) return;
     try {
-        await db.collection('meta').doc('counters').set({ phoenixHNumberCounter: 1247 });
+        await db.collection('meta').doc('counters').set({ phoenixHNumberCounter: 1312 });
         await generateHNumber();
         alert('H-number counter reset.');
     } catch (err) {
