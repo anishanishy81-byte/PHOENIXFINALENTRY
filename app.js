@@ -1,779 +1,1518 @@
-// Application State
+// ============================================================
+// PHOENIX ONCOPATHOLOGY - ENHANCED VERSION
+// ============================================================
+
 let currentUser = null;
 let currentRole = null;
-let entries = [];
-let loginActivity = [];
-let currentHNumber = null; // Store the current displayed candidate H number
-let hospitals = [ /* default list kept below (trimmed in this file preview) */ ];
-let doctors = [ /* default doctor list kept below (trimmed in this file preview) */ ];
-
-const credentials = {
-    "ANISH": { password: "HARHARMAHADEV", role: "admin", name: "Administrator" },
-    "SHARAN": { password: "8892970383", role: "SHARAN", name: "User One" },
-    "MANU": { password: "9947502699", role: "admin", name: "Administrator" },
-    "SUDHAKAR": { password: "8309205985", role: "SUDHAKAR", name: "User Three" },
-    "ADAM": { password: "8073507830", role: "ADAM", name: "User FOUR" },
-    "APARNA": { password: "7483912387", role: "APARNA", name: "Technician" }
+let hEntries = [];
+let cyEntries = [];
+let gpEntries = [];
+let ihcTests = [];
+let allMarkers = [];
+let hospitals = [];
+let doctors = [];
+let currentPage = 1;
+let itemsPerPage = 50;
+let additionalTests = [];
+let selectedMarkers = [];
+let pendingDeleteEntry = null;
+let pendingResetCounter = null;
+let googleSheetsConfig = {
+    hNumberUrl: '',
+    cyNumberUrl: '',
+    gpNumberUrl: ''
 };
 
-let editingIndex = -1;
-let addonIndex = -1;
+const hEntriesRef = 'hEntries';
+const cyEntriesRef = 'cyEntries';
+const gpEntriesRef = 'gpEntries';
+const ihcTestsRef = 'ihcTests';
+const countersRef = 'counters';
+const markersListRef = 'markersList';
+const hospitalsRef = 'hospitals';
+const doctorsRef = 'doctors';
+const configRef = 'config';
 
-/* ---------- Default hospitals & doctors arrays (kept from your original file) ---------- */
-hospitals = [
-    "AKSHA HOSPITALS", "APOLLO B.G ROAD", "CUREMAX", "DR R. B. PATIL HOSPITAL",
-    "DURGA HEALTHCARE", "HIGHLAND HOSPITAL", "HOSMAT 3", "INDIANA HOSPITAL",
-    "KCTRI", "KIMS AL SHIFA", "MIO HOSPITALS", "MOTHERHOOD", "NAMMA AROGYA",
-    "NORTH WEST HOSPITAL", "PATHOGENIX", "PRIMA DIAGNOSTICS", "SARALAYA",
-    "SL. GASTRO & LIVER CLINIC", "SRI PRAAGNA", "SRI PRASHANTHI HOSPITAL",
-    "SRINIVASA HOSPITALS", "VENUS HEALTHCARE", "SIRI LABS", "GOVT MEDICAL COLLEGE",
-    "CRIYA HOSPITALS", "MANGALA HOSPITALS", "BMJH HOSPITAL", "SPARSHA DIAGNOSTICS",
-    "AGILUS DIAGNOSTICS", "HOSMAT H1", "OYSTER", "ALTOR", "HOMAT 2",
-    "FATHER MULLER HOSPITAL", "PATHOGENIX LABS", "APOLLO HOSPITAL",
-    "NANJAPPA LIFE CARE SHIVAMOGGA", "VIJAYSHREE HOSPITALS", "UNITY HOSPITAL",
-    "HAMILTON BAAILEY", "KLE", "RADON CANCER CENTRE", "MAITHRI HOSPITAL",
-    "HOSMAT 2", "SOLARIS", "APEX HOSPITALS", "RAMAIAH MCH", "HEALIUS HOSPITAL",
-    "AROSYA", "QXL", "ARION RADIOTHERAPY", "Y LABS MANGALORE", "CANVA",
-    "NEW LIFE HOSPITAL", "SURGIDERMA", "PATHCARE", "SPARSH HOSPITAL",
-    "SHANTI HOSPITAL", "ASHWINI DIAGNOSTICS", "SVM HOSPITAL"
-];
+const defaultMarkers = ['KI67', 'ER', 'PR', 'HER2NEU', 'CD20', 'CD3', 'CD10', 'CK', 'VIMENTIN', 'SMA', 'S100', 'LCA', 'BCL2', 'BCL6', 'CD30', 'MUM1', 'DESMIN', 'PAX5', 'PAX8', 'TTF1', 'NAPSIN A', 'CK7', 'CK20', 'GATA3', 'TRPS1', 'SYNAPTO', 'CHROMO', 'INSM1', 'INI', 'AMACR', 'P16', 'C-MYC', 'MLH1', 'MSH2', 'MSH6', 'PMS2', 'CD5', 'D240', 'WT1', 'CA 19.9', 'MMR', 'P53', 'H CALDESMON', 'CD117', 'DOG1', 'INHIBIN', 'CYCLIN D', 'BOB1', 'OCT 2', 'UROPLAQIN', 'CALRETININ', 'BEREP4', 'CDX2', 'ARSINACE', 'MDM2', 'HMB45', 'FNSM1', 'CALONIN', 'MALAN A', 'CD34', 'STAT6', 'ERG', 'CALPONIN', 'CK5/6', 'P63', 'CD23', 'CDK4', 'MYOD1', 'CD31', 'NKX3.1', 'MUC5AC', 'P40', 'CK19', 'CD7', 'CD1A', 'TLE1', 'CD21', 'EMA', 'CD99', 'H3K27ME3', 'cd79A', 'ALK1', 'CD4', 'CD8', 'PD1', 'GRANZYMB', 'CD56', 'SATB2', 'AR', 'KAPPA', 'LAMBDA', 'SOX 10', 'CD138', 'CD68', 'SALL4', 'NKX 2.2', 'BCOR', 'GLYPICAN 3', 'MPO', 'CD43', 'CA 125', 'SOX11', 'TDT', 'CD163', 'HEPPAR', 'PDL1', 'sf1', 'B CATERIN', 'lmp1', 'CMV'];
 
-doctors = [
-    "DR HARI KIRAN", "DR ADITHYA", "DR AJAY KUMAR", "DR ANIL KAMATH",
-    "DR ANITA DAND", "DR ANTHONY PIAS", "DR ARAVIND", "DR ASHWIN M",
-    "DR B J PRASAD REDDY", "DR B. R. PATIL", "DR DINESH SHET", "DR FAVAZ ALI M",
-    "DR GAURAV SHETTY", "DR GURUPRASAD BHAT", "DR HARI KIRAN REDDY",
-    "DR HEMANTH KUMAR", "DR INDUMATHY", "DR KIRAN KATTIMANI", "DR KUSHAL",
-    "DR MADHUSHREE", "DR MANOJ GOWDA", "Dr NAVANEETH KAMATH", "DR NISHITHA SHETTY",
-    "DR SAHITHYA DESIREDDY", "DR SHEELA", "DR SHIVASHANKAR BHAT", "DR SHOBITHA RAO",
-    "DR SHRAVAN R", "DR SIDDARTH S", "DR SOWDIN REDDY", "DR SUMANTH BHOOPAL",
-    "DR SURESH RAO", "DR SURYA SEN", "DR SWASTHIK", "DR SYAMALA SRIDEVI",
-    "DR T.S RAO", "DR VIJAY AGARWAL", "DR VIJITH SHETTY", "DR VISHWANATH",
-    "Dr.ASHWIN", "Dr.KRISHNA PRASAD", "Dr.MEENAKSHI JAIN", "Dr.SAMSKRTHY P MURTHY",
-    "DR MANAS", "DR ALKA C BHAT", "DR GEETHA J P", "S S RAJU", "DR LENON DISOUSA",
-    "DR ELDOY SALDANHA", "DR NEELIMA", "DR MADHURI SUMANTH", "DR ROOPESH",
-    "DR SUMAN KUMAR", "DR VAMSEEDHAR", "DR AMIT KIRAN", "DR VIKRAM MAIYA",
-    "DR DEEPU N K", "DR JALAUDDIN AKBAR", "DR MERLIN", "DR SAMSKRITI",
-    "DR SANGEETHA K", "DR GOWRI", "DR YAMINI", "DR RAVEENA", "DR LYNSEL",
-    "DR SUDHAKAR", "DR DINESH SHET", "DR SANTHOSH", "DR NAVEEN GOPAL",
-    "DR ARAVIND N", "DR NAVANEETH KAMATH", "DR HARISHA K", "DR GURUCHANNA B",
-    "DR DINESH KADAM", "DR BHAVANA SHERIGAR", "DR AADARSH", "DR ABHIJITH SHETTY",
-    "MANGESH KAMATH", "DR SHASHIDHAR", "DR SANJEEV KULGOD", "DR BHUSHAN",
-    "K MADHAVA RAO", "DR PAMPANAGOWDA", "DR MOUNA B.M", "DR CHANDRA SHEKAR", 
-    "DR DINESH", "DR KRITHIKA", "DR BUSHAN", "DR ROHAN CHANDRA GATTI",
-    "DR SHREYAS N M", "DR SRIHARI", "Ninan Thomas", "DR HARISH", "DR SMITHA RAO",
-    "DR VENKATARAMANA", "DR KIRANA PAILOOR", "Y SANATH HEGDE", "Dr RANGANATH",
-    "Dr SHIVA KUMAR", "DR RAVKANTH", "DR SHYAMALA REDDY", "KALPANA SRIDHAR",
-    "DR CHANDRAKANTH", "DR MUSTAFA", "DR VIJAY KUMAR", "DR SANDHYA RAVI",
-    "DR VIDYA V BHAT", "DR NCP", "DR SUNIL KUMAR", "NITHIN", "APOORVA S",
-    "DR SHIVA PRASAD G", "DR CHANDANA PAI", "DR CHAITHRA BHAT", "DR PALLAVI",
-    "DR JEFFREY LEWIS", "DR AMAR D N"
-];
-/* ------------------------------------------------------------------------------------- */
+const defaultHospitals = ["ADDINGLIFE", "AGILUS DIAGNOSTICS", "AKSHA HOSPITALS", "ALTOR", "AMBEDKAR", "APEX HOSPITALS", "APOLLO B.G ROAD", "APOLLO HOSPITAL", "ARION RADIOTHERAPY", "AROSYA", "ASHWINI DIAGNOSTICS", "BMJH HOSPITAL", "CANVA", "CRIYA HOSPITALS", "CUREMAX", "DR R. B. PATIL HOSPITAL", "DURGA HEALTHCARE", "FATHER MULLER HOSPITAL", "GOVT MEDICAL COLLEGE", "HAMILTON BAAILEY", "HEALIUS HOSPITAL", "HIGHLAND HOSPITAL", "HOMAT 2", "HOSMAT 2", "HOSMAT 3", "HOSMAT H1", "INDIANA HOSPITAL", "ISHA DIAGNOSIS", "KANVA", "KCTRI", "KIMS AL SHIFA", "KLE", "MAITHRI HOSPITAL", "MANGALA HOSPITALS", "MEDAX", "MIO HOSPITALS", "MOTHERHOOD", "NAMMA AROGYA", "NANJAPPA LIFE CARE SHIVAMOGGA", "NEW LIFE HOSPITAL", "NORTH WEST HOSPITAL", "OYSTER", "PATHCARE", "PATHOGENIX", "PATHOGENIX LABS", "PRIMA DIAGNOSTICS", "QXL", "RADON CANCER CENTRE", "RAINBOW", "RAMAIAH MCH", "SARALAYA", "SELF", "SHANTI HOSPITAL", "SHARAVATHI HOSPITAL", "SIRI LABS", "SL. GASTRO & LIVER CLINIC", "SOLARIS", "SPARSH HOSPITAL", "SPARSHA DIAGNOSTICS", "SRI PRAAGNA", "SRI PRASHANTHI HOSPITAL", "SRINIVASA HOSPITALS", "SURGIDERMA", "SVM HOSPITAL", "UNITY HOSPITAL", "VENUS HEALTHCARE", "VIJAYSHREE HOSPITALS", "Y LABS MANGALORE"];
 
-/* Firestore reference (db) is defined in index.html earlier as:
-   const db = firebase.firestore();
-   (compat SDK loaded in index.html)
-*/
+const defaultDoctors = ["APOORVA S", "DR AADARSH", "DR ABHIJITH SHETTY", "DR ADITHYA", "DR AJAY KUMAR", "DR ALKA C BHAT", "DR AMAR D N", "DR AMIT KIRAN", "DR ANIL KAMATH", "DR ANITA DAND", "DR ANTHONY PIAS", "DR ARAVIND", "DR ARAVIND N", "DR ASHWIN M", "DR B J PRASAD REDDY", "DR B. R. PATIL", "DR BHAVANA SHERIGAR", "DR BHUSHAN", "DR BUSHAN", "DR CHAITHRA BHAT", "DR CHANDANA PAI", "DR CHANDRA SHEKAR", "DR CHANDRAKANTH", "DR DEEPAK SAMPATH", "DR DEEPU N K", "DR DINESH", "DR DINESH KADAM", "DR DINESH SHET", "DR DON GROGERY MASCARENHAS", "DR ELDOY SALDANHA", "DR FAVAZ ALI M", "DR GAURAV SHETTY", "DR GEETHA J P", "DR GOWRI", "DR GURUCHANNA B", "DR GURUPRASAD BHAT", "DR HARI KIRAN", "DR HARI KIRAN REDDY", "DR HARISH", "DR HARISHA K", "DR HEMANTH KUMAR", "DR INDUMATHY", "DR JAGANNATH DIXIT", "DR JALAUDDIN AKBAR", "DR JAYA CHAITANYA", "DR JEFFREY LEWIS", "DR KARTHIK", "DR KIRAN KATTIMANI", "DR KIRANA PAILOOR", "DR KRITHIKA", "DR KUSHAL", "DR LENON DISOUSA", "DR LYNSEL", "DR MADHURI SUMANTH", "DR MADHUSHREE", "DR MANAS", "DR MANOJ GOWDA", "DR MERLIN", "DR MOUNA B.M", "DR MUSTAFA", "DR NAVANEETH KAMATH", "DR NAVEEN GOPAL", "DR NCP", "DR NEELIMA", "DR NIKHIL TIWARI", "DR NISHITHA SHETTY", "DR PALLAVI", "DR PAMPANAGOWDA", "DR PRAMOD", "DR PRASHANTHA B", "DR RAVEENA", "DR RAVKANTH", "DR ROHAN CHANDRA GATTI", "DR ROHIT PINTO", "DR ROOPESH", "DR SAHITHYA DESIREDDY", "DR SAMSKRITI", "DR SANDHYA RAVI", "DR SANGEETHA K", "DR SANJEEV KULGOD", "DR SANJITH MANDAL", "DR SANTHOSH", "DR SHASHIDHAR", "DR SHEELA", "DR SHIVA PRASAD G", "DR SHIVASHANKAR BHAT", "DR SHOBITHA RAO", "DR SHRAVAN R", "DR SHREYAS N M", "DR SHYAMALA REDDY", "DR SIDDARTH S", "DR SMITHA RAO", "DR SOWDIN REDDY", "DR SRIHARI", "DR SUDHAKAR", "DR SUJATHA", "DR SUMAN KUMAR", "DR SUMANTH BHOOPAL", "DR SUNIL KUMAR", "DR SURESH RAO", "DR SURYA SEN", "DR SWASTHIK", "DR SYAMALA SRIDEVI", "DR T.S RAO", "DR VAMSEEDHAR", "DR VENKATACHALA", "DR VENKATARAMANA", "DR VIDYA V BHAT", "DR VIJAY AGARWAL", "DR VIJAY KUMAR", "DR VIJITH SHETTY", "DR VIKRAM MAIYA", "DR VISHWANATH", "DR YAMINI", "Dr NAVANEETH KAMATH", "Dr RANGANATH", "Dr SHIVA KUMAR", "Dr.ASHWIN", "Dr.KRISHNA PRASAD", "Dr.MEENAKSHI JAIN", "Dr.SAMSKRTHY P MURTHY", "K MADHAVA RAO", "KALPANA SRIDHAR", "KIRAN KUMAR", "LINGARAJU BABU", "MANGESH KAMATH", "NARAYANA", "NITHIN", "Ninan Thomas", "S S RAJU", "SAMEENA", "SELF", "Y SANATH HEGDE"];
 
-document.addEventListener('DOMContentLoaded', function() {
-    initApp();
+const credentials = {
+    "ANISH": { password: "HARHARMAHADEV", role: "admin" },
+    "SHARAN": { password: "8892970383", role: "user" },
+    "MANU": { password: "9947502699", role: "admin" },
+    "SUDHAKAR": { password: "8309205985", role: "user" },
+    "ADAM": { password: "8073507830", role: "user" },
+    "APARNA": { password: "7483912387", role: "user" }
+};
+
+// ---------- Google Sheets Integration ----------
+
+async function sendToGoogleSheets(data, sheetType) {
+    const url = googleSheetsConfig[sheetType + 'Url'];
+    if (!url) {
+        console.log('No Google Sheets URL configured for', sheetType);
+        return;
+    }
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        console.log('Data sent to Google Sheets:', sheetType);
+    } catch (error) {
+        console.error('Error sending to Google Sheets:', error);
+    }
+}
+
+async function loadGoogleSheetsConfig() {
+    try {
+        if (typeof db !== 'undefined' && db.collection) {
+            const configSnap = await db.collection(configRef).doc('googleSheets').get();
+            if (configSnap.exists) {
+                googleSheetsConfig = configSnap.data();
+            }
+        }
+    } catch (err) {
+        console.error('Error loading Google Sheets config:', err);
+    }
+}
+
+async function saveGoogleSheetsConfig() {
+    const hUrl = document.getElementById('hNumberSheetUrl')?.value.trim() || '';
+    const cyUrl = document.getElementById('cyNumberSheetUrl')?.value.trim() || '';
+    const gpUrl = document.getElementById('gpNumberSheetUrl')?.value.trim() || '';
+
+    googleSheetsConfig = {
+        hNumberUrl: hUrl,
+        cyNumberUrl: cyUrl,
+        gpNumberUrl: gpUrl
+    };
+
+    try {
+        if (typeof db !== 'undefined' && db.collection) {
+            await db.collection(configRef).doc('googleSheets').set(googleSheetsConfig);
+        }
+        showSuccessModal('✅ Google Sheets URLs saved successfully!');
+    } catch (err) {
+        console.error('Error saving Google Sheets config:', err);
+        showSuccessModal('❌ Error saving configuration');
+    }
+}
+
+function populateGoogleSheetsConfig() {
+    const hUrlInput = document.getElementById('hNumberSheetUrl');
+    const cyUrlInput = document.getElementById('cyNumberSheetUrl');
+    const gpUrlInput = document.getElementById('gpNumberSheetUrl');
+
+    if (hUrlInput) hUrlInput.value = googleSheetsConfig.hNumberUrl || '';
+    if (cyUrlInput) cyUrlInput.value = googleSheetsConfig.cyNumberUrl || '';
+    if (gpUrlInput) gpUrlInput.value = googleSheetsConfig.gpNumberUrl || '';
+}
+
+function copyScriptToClipboard() {
+    const scriptCode = `function doPost(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var data = JSON.parse(e.postData.contents);
+    
+    // Initialize headers if sheet is empty
+    if (sheet.getLastRow() === 0) {
+      var headers = ['Date', 'Number', 'Patient Name', 'Age', 'Gender', 'Hospital', 'Doctor', 'Clinical Information', 'Containers', 'Test'];
+      sheet.appendRow(headers);
+      sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#21808D').setFontColor('#FFFFFF');
+    }
+    
+    // Prepare row data based on type
+    var rowData = [
+      data.date || '',
+      data.hNumber || data.cyNumber || data.gpNumber || '',
+      data.patientName || '',
+      data.age || '',
+      data.gender || '',
+      data.hospital || '',
+      data.doctor || '',
+      data.information || '',
+      data.containers || '',
+      data.test || ''
+    ];
+    
+    sheet.appendRow(rowData);
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      'status': 'success',
+      'message': 'Data saved successfully'
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      'status': 'error',
+      'message': error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+
+    navigator.clipboard.writeText(scriptCode).then(() => {
+        showSuccessModal('✅ Script copied to clipboard!');
+    }).catch(err => {
+        console.error('Error copying:', err);
+        showSuccessModal('❌ Failed to copy script');
+    });
+}
+
+// ---------- Initialization ----------
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await initApp();
 });
 
 async function initApp() {
-    await loadStoredData();
-    initializeEventListeners();
     checkLoginStatus();
+    await loadAllData();
+    await loadGoogleSheetsConfig();
 }
-
-// ---------------- Firestore helpers ----------------
-
-async function getMetaDoc(docName) {
-    const ref = db.collection('meta').doc(docName);
-    const snap = await ref.get();
-    return { ref, snap };
-}
-
-// load data from Firestore (or seed if missing)
-async function loadStoredData() {
-    try {
-        // Load hospitals (single doc)
-        const hospitalsDocRef = db.collection('meta').doc('hospitals');
-        const hospitalsSnap = await hospitalsDocRef.get();
-        if (hospitalsSnap.exists && hospitalsSnap.data().list && hospitalsSnap.data().list.length) {
-            hospitals = hospitalsSnap.data().list;
-        } else {
-            // seed
-            await hospitalsDocRef.set({ list: hospitals });
-        }
-
-        // Load doctors
-        const doctorsDocRef = db.collection('meta').doc('doctors');
-        const doctorsSnap = await doctorsDocRef.get();
-        if (doctorsSnap.exists && doctorsSnap.data().list && doctorsSnap.data().list.length) {
-            doctors = doctorsSnap.data().list;
-        } else {
-            await doctorsDocRef.set({ list: doctors });
-        }
-
-        // Load entries (all)
-        const entriesSnap = await db.collection('entries').orderBy('timestamp', 'desc').get();
-        entries = [];
-        entriesSnap.forEach(doc => {
-            const data = doc.data();
-            data._id = doc.id;
-            entries.push(data);
-        });
-
-        // Load loginActivity (recent few)
-        const activitySnap = await db.collection('loginActivity').orderBy('timestamp', 'desc').limit(100).get();
-        loginActivity = [];
-        activitySnap.forEach(doc => {
-            const d = doc.data();
-            d._id = doc.id;
-            loginActivity.push(d);
-        });
-
-        // Ensure counters doc exists
-        const countersRef = db.collection('meta').doc('counters');
-        const countersSnap = await countersRef.get();
-        if (!countersSnap.exists) {
-            await countersRef.set({ phoenixHNumberCounter: 0 });
-        }
-
-        // Generate candidate H number for UI
-        await generateHNumber();
-
-    } catch (err) {
-        console.error('Error loading data from Firestore:', err);
-        alert('Could not load data from Firestore. Check console for details.');
-    }
-}
-
-// Save hospitals/doctors back to Firestore (when adding new entries)
-async function saveMetaLists() {
-    try {
-        await db.collection('meta').doc('hospitals').set({ list: hospitals });
-        await db.collection('meta').doc('doctors').set({ list: doctors });
-    } catch (err) {
-        console.error('Error saving meta lists to Firestore:', err);
-    }
-}
-
-// ---------------- Session & Login helpers ----------------
 
 function checkLoginStatus() {
-    const storedUser = sessionStorage.getItem('phoenixCurrentUser');
-    const storedRole = sessionStorage.getItem('phoenixCurrentRole');
-    const storedName = sessionStorage.getItem('phoenixCurrentName');
-
-    if (storedUser && storedRole) {
-        currentUser = storedUser;
-        currentRole = storedRole;
-        setupUserInterface(storedName);
+    const user = sessionStorage.getItem('phoenixUser');
+    const role = sessionStorage.getItem('phoenixRole');
+    if (user && role) {
+        currentUser = user;
+        currentRole = role;
+        setupUI();
         showPage('home');
     } else {
         showPage('login');
     }
 }
 
-function initializeEventListeners() {
-    // Login form
-    document.getElementById('loginForm').addEventListener('submit', handleLogin);
+// ---------- Login ----------
 
-    // Patient form
-    document.getElementById('patientForm').addEventListener('submit', handlePatientSubmit);
-
-    // Searchable dropdowns
-    setupSearchableDropdown('hospitalInput', 'hospitalDropdown', hospitals);
-    setupSearchableDropdown('doctorInput', 'doctorDropdown', doctors);
-
-    // Close dropdowns when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.searchable-dropdown')) {
-            document.querySelectorAll('.dropdown-list').forEach(list => {
-                list.classList.remove('active');
-            });
-        }
-    });
-
-    // Load Google Sheets URL if stored (fallback to localStorage for this single admin preference)
-    const storedUrl = localStorage.getItem('phoenixGoogleSheetUrl');
-    if (storedUrl) {
-        document.getElementById('googleSheetUrl').value = storedUrl;
-    }
-}
-
-async function handleLogin(e) {
+document.getElementById('loginForm')?.addEventListener('submit', (e) => {
     e.preventDefault();
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
-
+    
     if (credentials[username] && credentials[username].password === password) {
         currentUser = username;
         currentRole = credentials[username].role;
-        const currentName = credentials[username].name;
+        sessionStorage.setItem('phoenixUser', currentUser);
+        sessionStorage.setItem('phoenixRole', currentRole);
+        setupUI();
+        showPage('home');
+    } else {
+        showSuccessModal('❌ Invalid credentials');
+    }
+});
 
-        // Session storage for UI
-        sessionStorage.setItem('phoenixCurrentUser', currentUser);
-        sessionStorage.setItem('phoenixCurrentRole', currentRole);
-        sessionStorage.setItem('phoenixCurrentName', currentName);
+function setupUI() {
+    const navbar = document.getElementById('navbar');
+    if (navbar) navbar.classList.remove('hidden');
+    const nameEl = document.getElementById('currentUserName');
+    const roleEl = document.getElementById('currentUserRole');
+    if (nameEl) nameEl.textContent = currentUser || '';
+    if (roleEl) roleEl.textContent = (currentRole || '').toUpperCase();
+    
+    if (currentRole === 'admin') {
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+    }
+    
+    setTodayDate();
+    generateHNumber();
+    generateCYNumber();
+    generateGPNumber();
+    initializeSearchableDropdowns();
+    initializeIHCMarkerDropdown();
+    loadStatistics();
+    populateGoogleSheetsConfig();
+}
 
-        // Log activity to Firestore
-        const activity = {
-            username: currentUser,
-            name: currentName,
-            role: currentRole,
-            timestamp: new Date().toISOString(),
-            status: 'online'
-        };
-        try {
-            await db.collection('loginActivity').add(activity);
-            // locally push for immediate UI
-            loginActivity.unshift(activity);
-        } catch (err) {
-            console.error('Error writing login activity to Firestore', err);
+function showLogoutModal() {
+    const modal = document.getElementById('logoutModal');
+    if (modal) modal.classList.add('active');
+}
+
+function confirmLogout() {
+    sessionStorage.clear();
+    currentUser = null;
+    currentRole = null;
+    const navbar = document.getElementById('navbar');
+    if (navbar) navbar.classList.add('hidden');
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) loginForm.reset();
+    closeModal('logoutModal');
+    showPage('login');
+}
+
+// ---------- Data loading ----------
+
+async function loadAllData() {
+    try {
+        if (typeof db === 'undefined' || !db.collection) {
+            console.warn('Database (db) not detected. Skipping remote load.');
+            allMarkers = defaultMarkers.slice();
+            hospitals = defaultHospitals.slice();
+            doctors = defaultDoctors.slice();
+            return;
         }
 
-        setupUserInterface(currentName);
-        showPage('home');
-        document.getElementById('loginForm').reset();
-
-        setTimeout(() => {
-            alert(`Welcome to Phoenix Oncopathology, ${currentName}!`);
-        }, 100);
-    } else {
-        alert('Invalid credentials. Please check username and password.');
+        const hSnap = await db.collection(hEntriesRef).orderBy('timestamp', 'desc').get();
+        hEntries = hSnap.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+        
+        const cySnap = await db.collection(cyEntriesRef).orderBy('timestamp', 'desc').get();
+        cyEntries = cySnap.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+        
+        const gpSnap = await db.collection(gpEntriesRef).orderBy('timestamp', 'desc').get();
+        gpEntries = gpSnap.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+        
+        const ihcSnap = await db.collection(ihcTestsRef).orderBy('timestamp', 'desc').get();
+        ihcTests = ihcSnap.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+        
+        const markersSnap = await db.collection(markersListRef).doc('list').get();
+        allMarkers = markersSnap.exists ? markersSnap.data().markers : defaultMarkers;
+        if (!markersSnap.exists) await db.collection(markersListRef).doc('list').set({ markers: defaultMarkers });
+        
+        const hospitalsSnap = await db.collection(hospitalsRef).doc('list').get();
+        hospitals = hospitalsSnap.exists ? hospitalsSnap.data().items : defaultHospitals;
+        if (!hospitalsSnap.exists) await db.collection(hospitalsRef).doc('list').set({ items: defaultHospitals });
+        
+        const doctorsSnap = await db.collection(doctorsRef).doc('list').get();
+        doctors = doctorsSnap.exists ? doctorsSnap.data().items : defaultDoctors;
+        if (!doctorsSnap.exists) await db.collection(doctorsRef).doc('list').set({ items: defaultDoctors });
+        
+        const countersSnap = await db.collection(countersRef).doc('meta').get();
+        if (!countersSnap.exists) {
+            await db.collection(countersRef).doc('meta').set({ hCounter: 1282, cyCounter: 25, gpCounter: 30 });
+        }
+    } catch (err) {
+        console.error('Error loading data:', err);
     }
 }
 
-function setupUserInterface(userName) {
-    document.body.className = currentRole;
-    document.getElementById('navbar').classList.remove('hidden');
+// ---------- UI helpers ----------
 
-    // Update user info in navbar
-    document.getElementById('currentUserName').textContent = userName;
-    document.getElementById('currentUserRole').textContent = currentRole.toUpperCase();
-
-    // Initialize home page
-    setTodayDate();
-
-    // Update admin stats and populate pages
-    updateAdminStats();
-    loadLoginActivity();
+function initializeSearchableDropdowns() {
+    setupSearchableDropdown('hospitalInput', 'hospitalDropdown', hospitals);
+    setupSearchableDropdown('doctorInput', 'doctorDropdown', doctors);
+    setupSearchableDropdown('cyHospitalInput', 'cyHospitalDropdown', hospitals);
+    setupSearchableDropdown('cyDoctorInput', 'cyDoctorDropdown', doctors);
+    setupSearchableDropdown('gpHospitalInput', 'gpHospitalDropdown', hospitals);
+    setupSearchableDropdown('gpDoctorInput', 'gpDoctorDropdown', doctors);
 }
 
-// ---------------- H Number generation + atomic increment ----------------
+function initializeIHCMarkerDropdown() {
+    const input = document.getElementById('ihcMarkerInput');
+    const dropdown = document.getElementById('ihcMarkerDropdown');
+    
+    if (!input || !dropdown) return;
+    
+    function showAll() {
+        dropdown.innerHTML = allMarkers.map(marker => 
+            `<li onclick="selectMarkerFromDropdown('${marker.replace(/"/g, '\\"')}')">${marker}</li>`
+        ).join('');
+        dropdown.style.display = 'block';
+    }
+    
+    function filter(searchText) {
+        const filtered = allMarkers.filter(marker => 
+            marker.toLowerCase().includes(searchText.toLowerCase())
+        );
+        dropdown.innerHTML = filtered.map(marker => 
+            `<li onclick="selectMarkerFromDropdown('${marker.replace(/"/g, '\\"')}')">${marker}</li>`
+        ).join('');
+        dropdown.style.display = filtered.length > 0 ? 'block' : 'none';
+    }
+    
+    input.addEventListener('focus', showAll);
+    input.addEventListener('input', (e) => {
+        if (e.target.value) {
+            filter(e.target.value);
+        } else {
+            showAll();
+        }
+    });
+    
+    document.addEventListener('click', (e) => {
+        if (e.target !== input && e.target.parentElement !== dropdown) {
+            dropdown.style.display = 'none';
+        }
+    });
+}
+
+function selectMarkerFromDropdown(marker) {
+    const el = document.getElementById('ihcMarkerInput');
+    if (el) el.value = marker;
+    const dd = document.getElementById('ihcMarkerDropdown');
+    if (dd) dd.style.display = 'none';
+}
+
+function addMarkerToList() {
+    const input = document.getElementById('ihcMarkerInput');
+    const marker = (input?.value || '').trim().toUpperCase();
+    
+    if (!marker) {
+        showSuccessModal('Please select a marker');
+        return;
+    }
+    
+    selectedMarkers.push(marker);
+    updateMarkersList();
+    if (input) input.value = '';
+}
+
+function updateMarkersList() {
+    const container = document.getElementById('ihcAddedMarkers');
+    if (!container) return;
+    if (selectedMarkers.length === 0) {
+        container.innerHTML = '<p style="color: var(--color-text-secondary); text-align: center; padding: 10px;">No markers added yet</p>';
+        return;
+    }
+    
+    container.innerHTML = selectedMarkers.map((marker, idx) => `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--color-secondary); border-radius: 6px; margin-bottom: 6px;">
+            <span style="font-weight: 500;">${marker}</span>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeMarkerFromList(${idx})" style="padding: 4px 8px; font-size: 11px;">Remove</button>
+        </div>
+    `).join('');
+}
+
+function removeMarkerFromList(idx) {
+    selectedMarkers.splice(idx, 1);
+    updateMarkersList();
+}
+
+function setupSearchableDropdown(inputId, dropdownId, items) {
+    const input = document.getElementById(inputId);
+    const dropdown = document.getElementById(dropdownId);
+    
+    if (!input || !dropdown) return;
+    
+    function showAll() {
+        dropdown.innerHTML = items.map(item => `<li onclick="selectItem('${inputId}', '${item.replace(/"/g, '\\"')}')">${item}</li>`).join('');
+        dropdown.style.display = 'block';
+    }
+    
+    function filter(searchText) {
+        const filtered = items.filter(item => item.toLowerCase().includes(searchText.toLowerCase()));
+        dropdown.innerHTML = filtered.map(item => `<li onclick="selectItem('${inputId}', '${item.replace(/"/g, '\\"')}')">${item}</li>`).join('');
+        dropdown.style.display = filtered.length > 0 ? 'block' : 'none';
+    }
+    
+    input.addEventListener('focus', showAll);
+    input.addEventListener('input', (e) => {
+        if (e.target.value) {
+            filter(e.target.value);
+        } else {
+            showAll();
+        }
+    });
+    
+    document.addEventListener('click', (e) => {
+        if (e.target !== input && e.target.parentElement !== dropdown) {
+            dropdown.style.display = 'none';
+        }
+    });
+}
+
+function selectItem(inputId, value) {
+    const el = document.getElementById(inputId);
+    if (el) el.value = value;
+    const dropdownId = inputId.replace('Input', 'Dropdown');
+    const dd = document.getElementById(dropdownId);
+    if (dd) dd.style.display = 'none';
+}
+
+// ---------- Number generation ----------
 
 async function generateHNumber() {
     try {
-        const countersRef = db.collection('meta').doc('counters');
-        const snap = await countersRef.get();
-        let counter = 0;
-        if (snap.exists && typeof snap.data().phoenixHNumberCounter === 'number') {
-            counter = snap.data().phoenixHNumberCounter;
-        } else {
-            await countersRef.set({ phoenixHNumberCounter: 0 });
-            counter = 0;
+        if (typeof db === 'undefined') return;
+        const snap = await db.collection(countersRef).doc('meta').get();
+        let counter = snap.data()?.hCounter || 1282;
+        const year = new Date().getFullYear();
+        const hNum = `${counter}/${year % 100}`;
+        const el = document.getElementById('hNumber');
+        if (el) {
+            el.value = hNum;
+            el.dataset.counter = counter;
         }
-
-        const currentYear = new Date().getFullYear();
-        const nextNumber = counter + 1;
-        currentHNumber = `H-${nextNumber.toString().padStart(4, '0')}/${currentYear}`;
-        document.getElementById('hNumber').value = currentHNumber;
     } catch (err) {
         console.error('Error generating H number:', err);
-        document.getElementById('hNumber').value = 'H-0000/0000';
     }
 }
 
-// ---------------- Date helper ----------------
-
-function setTodayDate() {
-    const today = new Date().toLocaleDateString('en-GB');
-    document.getElementById('entryDate').value = today;
-}
-
-// ---------------- Searchable dropdown helpers (unchanged) ----------------
-
-function setupSearchableDropdown(inputId, dropdownId, dataArray) {
-    const input = document.getElementById(inputId);
-    const dropdown = document.getElementById(dropdownId);
-
-    input.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
-        const filteredData = dataArray.filter(item => 
-            item.toLowerCase().includes(searchTerm)
-        );
-
-        showDropdownItems(dropdown, filteredData, input);
-    });
-
-    input.addEventListener('focus', function() {
-        showDropdownItems(dropdown, dataArray, input);
-    });
-}
-
-function showDropdownItems(dropdown, items, input) {
-    dropdown.innerHTML = '';
-
-    items.slice(0, 10).forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'dropdown-item';
-        div.textContent = item;
-        div.addEventListener('click', () => {
-            input.value = item;
-            dropdown.classList.remove('active');
-        });
-        dropdown.appendChild(div);
-    });
-
-    dropdown.classList.add('active');
-}
-
-// ---------------- Add new hospital/doctor (persist to Firestore) ----------------
-
-async function addNewHospital() {
-    const name = prompt('Enter new hospital name:');
-    if (name && name.trim()) {
-        const newHospital = name.trim().toUpperCase();
-        if (!hospitals.includes(newHospital)) {
-            hospitals.push(newHospital);
-            hospitals.sort();
-            document.getElementById('hospitalInput').value = newHospital;
-            await saveMetaLists();
-            alert('Hospital added successfully!');
-        } else {
-            alert('Hospital already exists!');
+async function generateCYNumber() {
+    try {
+        if (typeof db === 'undefined') return;
+        const snap = await db.collection(countersRef).doc('meta').get();
+        let counter = snap.data()?.cyCounter || 25;
+        const year = new Date().getFullYear();
+        const cyNum = `${counter.toString().padStart(4, '0')}/${year % 100}`;
+        const el = document.getElementById('cyNumber');
+        if (el) {
+            el.value = cyNum;
+            el.dataset.counter = counter;
         }
+    } catch (err) {
+        console.error('Error generating CY number:', err);
     }
 }
 
-async function addNewDoctor() {
-    const name = prompt('Enter new doctor name:');
-    if (name && name.trim()) {
-        const newDoctor = name.trim().toUpperCase();
-        if (!doctors.includes(newDoctor)) {
-            doctors.push(newDoctor);
-            doctors.sort();
-            document.getElementById('doctorInput').value = newDoctor;
-            await saveMetaLists();
-            alert('Doctor added successfully!');
-        } else {
-            alert('Doctor already exists!');
+async function generateGPNumber() {
+    try {
+        if (typeof db === 'undefined') return;
+        const snap = await db.collection(countersRef).doc('meta').get();
+        let counter = snap.data()?.gpCounter || 30;
+        const year = new Date().getFullYear();
+        const gpNum = `GP-${counter.toString().padStart(4, '0')}/${year % 100}`;
+        const el = document.getElementById('gpNumber');
+        if (el) {
+            el.value = gpNum;
+            el.dataset.counter = counter;
         }
+    } catch (err) {
+        console.error('Error generating GP number:', err);
     }
 }
 
-// ---------------- Patient submit (Firestore transaction + optional Google Sheets) ----------------
+// ---------- Modals & additional tests ----------
 
-async function handlePatientSubmit(e) {
-    e.preventDefault();
+function showAddTestModal() {
+    const modal = document.getElementById('addTestModal');
+    if (modal) modal.classList.add('active');
+}
 
-    const googleSheetUrl = document.getElementById('googleSheetUrl').value.trim();
-
-    // Prepare formData from UI inputs (without final hNumber yet)
-    const tentativeDate = document.getElementById('entryDate').value;
-    const formData = {
-        date: tentativeDate,
-        patientName: document.getElementById('patientName').value.trim(),
-        age: document.getElementById('age').value,
-        gender: document.getElementById('gender').value,
-        hospital: document.getElementById('hospitalInput').value.trim(),
-        doctor: document.getElementById('doctorInput').value.trim(),
-        information: document.getElementById('information').value.trim(),
-        containers: document.getElementById('containers').value,
-        test: document.getElementById('testType').value,
-        username: currentUser,
-        timestamp: new Date().toISOString()
-    };
-
-    // Validate
-    if (!formData.patientName || !formData.hospital || !formData.doctor || !formData.age || !formData.gender || !formData.containers || !formData.test) {
-        alert('Please fill in all required fields.');
+async function saveAdditionalTest() {
+    const testTypeEl = document.getElementById('additionalTestType');
+    const testType = (testTypeEl?.value || '').trim();
+    if (!testType) {
+        showSuccessModal('Select test');
         return;
     }
+    
+    additionalTests.push(testType);
+    const container = document.getElementById('additionalTestsList');
+    if (container) {
+        container.innerHTML = additionalTests.map((test, idx) => `
+            <div style="display: flex; justify-content: space-between; padding: 8px; background: white; border-radius: 4px; margin-bottom: 8px;">
+                <span>${test}</span>
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeAdditionalTest(${idx})">Remove</button>
+            </div>
+        `).join('');
+    }
+    
+    const addBlock = document.getElementById('additionalTests');
+    if (addBlock) addBlock.style.display = 'block';
+    closeModal('addTestModal');
+    if (testTypeEl) testTypeEl.value = '';
+}
 
+function removeAdditionalTest(idx) {
+    additionalTests.splice(idx, 1);
+    const container = document.getElementById('additionalTestsList');
+    if (additionalTests.length === 0) {
+        const addBlock = document.getElementById('additionalTests');
+        if (addBlock) addBlock.style.display = 'none';
+        if (container) container.innerHTML = '';
+    } else if (container) {
+        container.innerHTML = additionalTests.map((test, i) => `
+            <div style="display: flex; justify-content: space-between; padding: 8px; background: white; border-radius: 4px; margin-bottom: 8px;">
+                <span>${test}</span>
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeAdditionalTest(${i})">Remove</button>
+            </div>
+        `).join('');
+    }
+}
+
+let currentModalType = 'h';
+
+function showAddHospitalModal(type = 'h') {
+    currentModalType = type;
+    const modal = document.getElementById('addHospitalModal');
+    if (modal) modal.classList.add('active');
+}
+
+function showAddDoctorModal(type = 'h') {
+    currentModalType = type;
+    const modal = document.getElementById('addDoctorModal');
+    if (modal) modal.classList.add('active');
+}
+
+function showAddMarkerModal() {
+    const input = document.getElementById('newMarkerName');
+    if (input) input.value = '';
+    const modal = document.getElementById('addMarkerModal');
+    if (modal) modal.classList.add('active');
+}
+
+async function saveNewHospital() {
+    const input = document.getElementById('newHospitalName');
+    const name = (input?.value || '').trim().toUpperCase();
+    if (!name || hospitals.includes(name)) {
+        showSuccessModal(name ? 'Hospital already exists' : 'Enter hospital name');
+        return;
+    }
+    
     try {
-        // If Google Sheets URL provided and not default placeholder, attempt Sheets sync first (optional)
-        if (googleSheetUrl && googleSheetUrl !== '') {
-            // attempt to send to Google Sheets but do not block final Firestore write on no-cors; keep as best-effort
-            try {
-                await saveToGoogleSheets({
-                    date: tentativeDate,
-                    hNumber: currentHNumber,
-                    patientName: formData.patientName,
-                    age: formData.age,
-                    hospital: formData.hospital,
-                    doctor: formData.doctor,
-                    information: formData.information,
-                    containers: formData.containers,
-                    test: formData.test
-                }, googleSheetUrl);
-                localStorage.setItem('phoenixGoogleSheetUrl', googleSheetUrl);
-            } catch (gsErr) {
-                console.warn('Google Sheets sync warning:', gsErr);
-                // continue — we will still save to Firestore
-            }
+        hospitals.push(name);
+        hospitals.sort();
+        if (typeof db !== 'undefined' && db.collection) {
+            await db.collection(hospitalsRef).doc('list').set({ items: hospitals });
         }
-
-        // Use transaction to increment counter atomically and then add entry with that H-number
-        const countersRef = db.collection('meta').doc('counters');
-
-        const result = await db.runTransaction(async (tx) => {
-            const snap = await tx.get(countersRef);
-            let counter = 0;
-            if (snap.exists && typeof snap.data().phoenixHNumberCounter === 'number') {
-                counter = snap.data().phoenixHNumberCounter;
-            }
-            const newCounter = counter + 1;
-            tx.update(countersRef, { phoenixHNumberCounter: newCounter });
-
-            const currentYear = new Date().getFullYear();
-            const newHNumber = `H-${newCounter.toString().padStart(4, '0')}/${currentYear}`;
-
-            // Compose entry with final H number
-            const entryToSave = {
-                ...formData,
-                hNumber: newHNumber,
-                date: tentativeDate,
-                savedAt: new Date().toISOString()
-            };
-
-            const entryRef = db.collection('entries').doc(); // auto-id
-            tx.set(entryRef, entryToSave);
-
-            return { newHNumber, entry: entryToSave };
-        });
-
-        // success
-        const saved = result;
-        entries.unshift(saved.entry); // local memory
-        await generateHNumber(); // show next candidate H number
-        await updateAdminStats();
-
-        alert(`Entry saved successfully!\nH Number: ${saved.newHNumber}\nPatient: ${formData.patientName}`);
-        resetForm();
-        displayEntries(entries);
-
-    } catch (error) {
-        console.error('Error saving entry:', error);
-        alert('Failed to save entry to Firestore. See console for details.');
+        initializeSearchableDropdowns();
+        if (input) input.value = '';
+        closeModal('addHospitalModal');
+        showSuccessModal('✅ Hospital added!');
+    } catch (err) {
+        console.error('Error:', err);
+        showSuccessModal('❌ Error adding hospital');
     }
 }
 
-// Save to Google Sheets - unchanged except payload shape (best-effort)
-async function saveToGoogleSheets(data, url) {
-    const payload = {
-        entry: {
-            date: data.date,
-            hNumber: data.hNumber,
-            patientName: data.patientName,
-            age: data.age,
-            hospital: data.hospital,
-            doctor: data.doctor,
-            info: data.information || data.info || '',
-            containers: data.containers,
-            testName: data.test || ''
+async function saveNewDoctor() {
+    const input = document.getElementById('newDoctorName');
+    const name = (input?.value || '').trim().toUpperCase();
+    if (!name || doctors.includes(name)) {
+        showSuccessModal(name ? 'Doctor already exists' : 'Enter doctor name');
+        return;
+    }
+    
+    try {
+        doctors.push(name);
+        doctors.sort();
+        if (typeof db !== 'undefined' && db.collection) {
+            await db.collection(doctorsRef).doc('list').set({ items: doctors });
         }
+        initializeSearchableDropdowns();
+        if (input) input.value = '';
+        closeModal('addDoctorModal');
+        showSuccessModal('✅ Doctor added!');
+    } catch (err) {
+        console.error('Error:', err);
+        showSuccessModal('❌ Error adding doctor');
+    }
+}
+
+async function saveNewMarker() {
+    const input = document.getElementById('newMarkerName');
+    const name = (input?.value || '').trim().toUpperCase();
+    if (!name || allMarkers.includes(name)) {
+        showSuccessModal(name ? 'Marker already exists' : 'Enter marker name');
+        return;
+    }
+    
+    try {
+        allMarkers.push(name);
+        allMarkers.sort();
+        if (typeof db !== 'undefined' && db.collection) {
+            await db.collection(markersListRef).doc('list').set({ markers: allMarkers });
+        }
+        initializeIHCMarkerDropdown();
+        if (input) input.value = '';
+        closeModal('addMarkerModal');
+        showSuccessModal('✅ Marker added!');
+    } catch (err) {
+        console.error('Error:', err);
+        showSuccessModal('❌ Error adding marker');
+    }
+}
+
+// ---------- Patient / Entry forms ----------
+
+// H (histopathology) form
+
+document.getElementById('patientForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const hNumEl = document.getElementById('hNumber');
+    const hNum = hNumEl?.value || '';
+    const counter = parseInt(hNumEl?.dataset.counter || 1282);
+    
+    const entry = {
+        hNumber: hNum, 
+        date: document.getElementById('entryDate')?.value, 
+        patientName: document.getElementById('patientName')?.value,
+        age: document.getElementById('age')?.value, 
+        gender: document.getElementById('gender')?.value,
+        hospital: document.getElementById('hospitalInput')?.value, 
+        doctor: document.getElementById('doctorInput')?.value,
+        test: document.getElementById('testType')?.value, 
+        additionalTests: additionalTests.slice(),
+        information: document.getElementById('information')?.value, 
+        containers: document.getElementById('containers')?.value,
+        user: currentUser, 
+        timestamp: new Date()
     };
+    
+    try {
+        if (typeof db !== 'undefined' && db.collection) {
+            const docRef = await db.collection(hEntriesRef).add(entry);
+            entry.id = docRef.id;
 
-    // use fetch with mode no-cors (as before) — this is best-effort
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        mode: 'no-cors'
-    });
+            if (entry.test === 'IHC' || additionalTests.includes('IHC')) {
+                await db.collection(ihcTestsRef).add({
+                    hNumber: hNum, 
+                    patientName: entry.patientName, 
+                    age: entry.age, 
+                    gender: entry.gender,
+                    hospital: entry.hospital, 
+                    doctor: entry.doctor, 
+                    date: entry.date, 
+                    parentId: docRef.id,
+                    user: currentUser, 
+                    markerHistory: [],
+                    timestamp: new Date()
+                });
+                await loadAllData();
+            }
 
-    return response;
+            await db.collection(countersRef).doc('meta').update({ hCounter: counter + 1 });
+        }
+
+        // Send to Google Sheets (without user field)
+        await sendToGoogleSheets({
+            date: entry.date,
+            hNumber: entry.hNumber,
+            patientName: entry.patientName,
+            age: entry.age,
+            gender: entry.gender,
+            hospital: entry.hospital,
+            doctor: entry.doctor,
+            information: entry.information,
+            containers: entry.containers,
+            test: entry.test + (entry.additionalTests.length > 0 ? ', ' + entry.additionalTests.join(', ') : '')
+        }, 'hNumber');
+
+        hEntries.unshift(entry);
+        showSuccessModal(`✅ Entry Saved!\nH Number: ${hNum}\nPatient: ${entry.patientName}`);
+        document.getElementById('patientForm')?.reset();
+        additionalTests = [];
+        const addBlock = document.getElementById('additionalTests');
+        if (addBlock) addBlock.style.display = 'none';
+        await generateHNumber();
+        setTodayDate();
+        displayHEntries();
+    } catch (err) {
+        console.error('Error:', err);
+        showSuccessModal('❌ Error saving entry');
+    }
+});
+
+// Cytology form
+
+document.getElementById('cytologyForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const cyNumEl = document.getElementById('cyNumber');
+    const cyNum = cyNumEl?.value || '';
+    const counter = parseInt(cyNumEl?.dataset.counter || 25);
+    
+    const entry = {
+        cyNumber: cyNum, 
+        date: document.getElementById('cyEntryDate')?.value, 
+        patientName: document.getElementById('cyPatientName')?.value,
+        age: document.getElementById('cyAge')?.value, 
+        gender: document.getElementById('cyGender')?.value,
+        hospital: document.getElementById('cyHospitalInput')?.value, 
+        doctor: document.getElementById('cyDoctorInput')?.value,
+        test: 'Cytology', 
+        information: document.getElementById('cyInformation')?.value,
+        user: currentUser, 
+        timestamp: new Date()
+    };
+    
+    try {
+        if (typeof db !== 'undefined' && db.collection) {
+            const docRef = await db.collection(cyEntriesRef).add(entry);
+            entry.id = docRef.id;
+            await db.collection(countersRef).doc('meta').update({ cyCounter: counter + 1 });
+            await loadAllData();
+        }
+
+        // Send to Google Sheets (without user field, no containers field for CY)
+        await sendToGoogleSheets({
+            date: entry.date,
+            cyNumber: entry.cyNumber,
+            patientName: entry.patientName,
+            age: entry.age,
+            gender: entry.gender,
+            hospital: entry.hospital,
+            doctor: entry.doctor,
+            information: entry.information,
+            containers: '',
+            test: entry.test
+        }, 'cyNumber');
+
+        cyEntries.unshift(entry);
+        showSuccessModal(`✅ Entry Saved!\nCY Number: ${cyNum}\nPatient: ${entry.patientName}`);
+        document.getElementById('cytologyForm')?.reset();
+        await generateCYNumber();
+        setTodayDate();
+        displayCYEntries();
+    } catch (err) {
+        console.error('Error:', err);
+        showSuccessModal('❌ Error saving entry');
+    }
+});
+
+// GP form
+
+document.getElementById('gpForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const gpNumEl = document.getElementById('gpNumber');
+    const gpNum = gpNumEl?.value || '';
+    const counter = parseInt(gpNumEl?.dataset.counter || 30);
+    
+    const entry = {
+        gpNumber: gpNum, 
+        date: document.getElementById('gpEntryDate')?.value, 
+        patientName: document.getElementById('gpPatientName')?.value,
+        age: document.getElementById('gpAge')?.value, 
+        gender: document.getElementById('gpGender')?.value,
+        hospital: document.getElementById('gpHospitalInput')?.value, 
+        doctor: document.getElementById('gpDoctorInput')?.value,
+        test: 'PAP SMEAR', 
+        information: document.getElementById('gpInformation')?.value,
+        user: currentUser, 
+        timestamp: new Date()
+    };
+    
+    try {
+        if (typeof db !== 'undefined' && db.collection) {
+            const docRef = await db.collection(gpEntriesRef).add(entry);
+            entry.id = docRef.id;
+            await db.collection(countersRef).doc('meta').update({ gpCounter: counter + 1 });
+            await loadAllData();
+        }
+
+        // Send to Google Sheets (without user field, no containers field for GP)
+        await sendToGoogleSheets({
+            date: entry.date,
+            gpNumber: entry.gpNumber,
+            patientName: entry.patientName,
+            age: entry.age,
+            gender: entry.gender,
+            hospital: entry.hospital,
+            doctor: entry.doctor,
+            information: entry.information,
+            containers: '',
+            test: entry.test
+        }, 'gpNumber');
+
+        gpEntries.unshift(entry);
+        showSuccessModal(`✅ Entry Saved!\nGP Number: ${gpNum}\nPatient: ${entry.patientName}`);
+        document.getElementById('gpForm')?.reset();
+        await generateGPNumber();
+        setTodayDate();
+        displayGPEntries();
+    } catch (err) {
+        console.error('Error:', err);
+        showSuccessModal('❌ Error saving entry');
+    }
+});
+
+// ---------- IHC marker handling ----------
+
+function showAddMarkersModal(testId) {
+    const test = ihcTests.find(t => t.id === testId);
+    if (!test) return;
+    
+    selectedMarkers = [];
+    const sel = document.getElementById('selectIHCTest');
+    if (sel) sel.value = testId;
+    const dateEl = document.getElementById('ihcMarkerDate');
+    if (dateEl) dateEl.valueAsDate = new Date();
+    const input = document.getElementById('ihcMarkerInput');
+    if (input) input.value = '';
+    updateMarkersList();
+    const modal = document.getElementById('addMarkersModal');
+    if (modal) modal.classList.add('active');
 }
 
-// ---------------- Reset form (mostly unchanged) ----------------
+function showViewMarkersModal(testId) {
+    const test = ihcTests.find(t => t.id === testId);
+    if (!test) return;
+    
+    const patientInfo = document.getElementById('viewMarkersPatientInfo');
+    if (patientInfo) {
+        patientInfo.innerHTML = `
+            <h4 style="margin: 0 0 10px 0; color: var(--color-primary);">Patient Information</h4>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 14px;">
+                <div><strong>H Number:</strong> ${test.hNumber}</div>
+                <div><strong>Patient Name:</strong> ${test.patientName}</div>
+                <div><strong>Age:</strong> ${test.age}</div>
+                <div><strong>Gender:</strong> ${test.gender}</div>
+                <div><strong>Hospital:</strong> ${test.hospital}</div>
+                <div><strong>Doctor:</strong> ${test.doctor}</div>
+            </div>
+        `;
+    }
+    
+    const content = document.getElementById('viewMarkersContent');
+    if (content) {
+        if (!test.markerHistory || test.markerHistory.length === 0) {
+            content.innerHTML = '<p style="text-align: center; color: var(--color-text-secondary); padding: 20px;">No markers added yet</p>';
+        } else {
+            content.innerHTML = test.markerHistory.map((history, idx) => `
+                <div style="margin-bottom: 20px; padding: 15px; background: rgba(33, 128, 141, 0.05); border-radius: 8px; border-left: 4px solid var(--color-primary);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h4 style="margin: 0; color: var(--color-primary);">Entry #${idx + 1} - ${history.date}</h4>
+                        <span style="font-size: 12px; color: var(--color-text-secondary);">Added by: ${history.user || 'N/A'}</span>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        ${history.markers.map(marker => `
+                            <span style="padding: 6px 12px; background: var(--color-primary); color: white; border-radius: 6px; font-size: 13px; font-weight: 600;">${marker}</span>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+    
+    const modal = document.getElementById('viewMarkersModal');
+    if (modal) modal.classList.add('active');
+}
 
-function resetForm() {
-    document.getElementById('patientForm').reset();
-    setTodayDate();
-    document.getElementById('hNumber').value = currentHNumber;
+function showAddTestToPatientModal(entryId) {
+    const el = document.getElementById('patientEntryId');
+    if (el) el.value = entryId;
+    const modal = document.getElementById('addTestToPatientModal');
+    if (modal) modal.classList.add('active');
+}
 
-    // Reset Google Sheets URL for admin
-    if (currentRole === 'admin') {
-        const storedUrl = localStorage.getItem('phoenixGoogleSheetUrl');
-        document.getElementById('googleSheetUrl').value = storedUrl || '';
+async function saveTestToPatient() {
+    const entryId = document.getElementById('patientEntryId')?.value;
+    const testType = document.getElementById('additionalTestTypeForPatient')?.value;
+    
+    if (!testType) {
+        showSuccessModal('Please select a test type');
+        return;
+    }
+    
+    try {
+        const entryIndex = hEntries.findIndex(e => e.id === entryId);
+        if (entryIndex === -1) return;
+        
+        const entry = hEntries[entryIndex];
+        if (!entry.additionalTests) entry.additionalTests = [];
+        entry.additionalTests.push(testType);
+        
+        if (typeof db !== 'undefined' && db.collection) {
+            await db.collection(hEntriesRef).doc(entryId).update({
+                additionalTests: entry.additionalTests
+            });
+        }
+        
+        if (testType === 'IHC') {
+            if (typeof db !== 'undefined' && db.collection) {
+                await db.collection(ihcTestsRef).add({
+                    hNumber: entry.hNumber,
+                    patientName: entry.patientName,
+                    age: entry.age,
+                    gender: entry.gender,
+                    hospital: entry.hospital,
+                    doctor: entry.doctor,
+                    date: entry.date,
+                    parentId: entryId,
+                    user: currentUser,
+                    markerHistory: [],
+                    timestamp: new Date()
+                });
+                await loadAllData();
+            }
+        }
+        
+        hEntries[entryIndex] = entry;
+        displayHEntries();
+        closeModal('addTestToPatientModal');
+        showSuccessModal('✅ Test added successfully!');
+    } catch (err) {
+        console.error('Error:', err);
+        showSuccessModal('❌ Error adding test');
     }
 }
 
-// ---------------- Page management & search/display ----------------
-
-function showPage(pageId) {
-    document.querySelectorAll('.page').forEach(page => {
-        page.classList.remove('active');
-    });
-
-    document.getElementById(pageId + 'Page').classList.add('active');
-
-    if (pageId === 'search') {
-        loadSearchPage();
-    } else if (pageId === 'admin') {
-        loadAdminPage();
-    } else if (pageId === 'logs') {
-        loadLogsPage();
-    } else if (pageId === 'login') {
-        document.getElementById('navbar').classList.add('hidden');
+async function saveMarkers() {
+    const testId = document.getElementById('selectIHCTest')?.value;
+    const date = document.getElementById('ihcMarkerDate')?.value;
+    
+    if (!testId || !date || selectedMarkers.length === 0) {
+        showSuccessModal('Please select test, date, and add at least one marker');
+        return;
+    }
+    
+    try {
+        const testIndex = ihcTests.findIndex(t => t.id === testId);
+        if (testIndex !== -1) {
+            const test = ihcTests[testIndex];
+            
+            // Initialize markerHistory if it doesn't exist
+            if (!test.markerHistory) {
+                test.markerHistory = [];
+            }
+            
+            // Add new marker entry to history
+            test.markerHistory.push({
+                date: date,
+                markers: selectedMarkers.slice(),
+                user: currentUser,
+                timestamp: new Date()
+            });
+            
+            ihcTests[testIndex] = test;
+            
+            if (typeof db !== 'undefined' && db.collection) {
+                await db.collection(ihcTestsRef).doc(testId).update({ 
+                    markerHistory: test.markerHistory
+                });
+                await loadAllData();
+            }
+            
+            showSuccessModal('✅ Markers saved successfully!');
+            closeModal('addMarkersModal');
+            selectedMarkers = [];
+            displayIHCEntries();
+        }
+    } catch (err) {
+        console.error('Error:', err);
+        showSuccessModal('❌ Error saving markers');
     }
 }
 
-function loadSearchPage() {
-    displayEntries(entries);
+// ---------- Display / filtering / pagination ----------
+
+function filterAndDisplayEntries(entries, searchText, numberField) {
+    let filtered = entries;
+    if (searchText) {
+        filtered = entries.filter(e => {
+            const searchLower = searchText.toLowerCase();
+            return (e[numberField]?.toLowerCase().includes(searchLower) ||
+                    e.patientName?.toLowerCase().includes(searchLower) ||
+                    e.hospital?.toLowerCase().includes(searchLower) ||
+                    e.doctor?.toLowerCase().includes(searchLower));
+        });
+    }
+    
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return { filtered, paged: filtered.slice(start, end) };
 }
 
-function displayEntries(entriesToShow) {
+function displayHEntries() {
+    const searchText = document.getElementById('searchH')?.value || '';
+    const { filtered, paged } = filterAndDisplayEntries(hEntries, searchText, 'hNumber');
     const tbody = document.getElementById('entriesTableBody');
-    tbody.innerHTML = '';
-
-    entriesToShow.forEach((entry, index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${entry.hNumber}</td>
-            <td>${entry.date}</td>
-            <td>${entry.patientName}</td>
-            <td>${entry.age}</td>
-            <td>${entry.gender}</td>
-            <td>${entry.hospital}</td>
-            <td>${entry.doctor}</td>
-            <td>${entry.test}</td>
-            <td>${entry.username}</td>
+    if (!tbody) return;
+    
+    tbody.innerHTML = paged.map(entry => `
+        <tr>
+            <td><strong>${entry.hNumber}</strong></td>
+            <td>${entry.date || ''}</td>
+            <td>${entry.patientName || ''}</td>
+            <td>${entry.age || ''}</td>
+            <td>${entry.gender || ''}</td>
+            <td>${entry.hospital || ''}</td>
+            <td>${entry.doctor || ''}</td>
+            <td>${entry.test || ''}${entry.additionalTests && entry.additionalTests.length > 0 ? ', ' + entry.additionalTests.join(', ') : ''}</td>
+            <td>${entry.user || ''}</td>
             <td>
-                <button class="action-btn action-btn--edit" onclick="editEntryById('${entry._id}')">
-                    <i class="fas fa-edit"></i> Edit
-                </button>
-                ${currentRole === 'admin' ? `
-                    <button class="action-btn action-btn--addon" onclick="addonEntryById('${entry._id}')">
-                        <i class="fas fa-plus"></i> Add-on
-                    </button>
-                    <button class="action-btn action-btn--delete" onclick="deleteEntryById('${entry._id}')">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-sm btn-primary" onclick="showAddTestToPatientModal('${entry.id}')">Add Test</button>
+                    <button class="btn btn-sm btn-danger" onclick="showDeleteEntryModal('h', '${entry.id}')">Delete</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+    displayPagination('paginationH', filtered.length, () => displayHEntries());
+}
+
+function displayCYEntries() {
+    const searchText = document.getElementById('searchCY')?.value || '';
+    const { filtered, paged } = filterAndDisplayEntries(cyEntries, searchText, 'cyNumber');
+    const tbody = document.getElementById('cytologyTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = paged.map(entry => `
+        <tr>
+            <td><strong>${entry.cyNumber}</strong></td>
+            <td>${entry.date || ''}</td>
+            <td>${entry.patientName || ''}</td>
+            <td>${entry.age || ''}</td>
+            <td>${entry.gender || ''}</td>
+            <td>${entry.hospital || ''}</td>
+            <td>${entry.doctor || ''}</td>
+            <td>${entry.user || ''}</td>
+            <td><button class="btn btn-sm btn-danger" onclick="showDeleteEntryModal('cy', '${entry.id}')">Delete</button></td>
+        </tr>
+    `).join('');
+    displayPagination('paginationCY', filtered.length, () => displayCYEntries());
+}
+
+function displayGPEntries() {
+    const searchText = document.getElementById('searchGP')?.value || '';
+    const { filtered, paged } = filterAndDisplayEntries(gpEntries, searchText, 'gpNumber');
+    const tbody = document.getElementById('gpTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = paged.map(entry => `
+        <tr>
+            <td><strong>${entry.gpNumber}</strong></td>
+            <td>${entry.date || ''}</td>
+            <td>${entry.patientName || ''}</td>
+            <td>${entry.age || ''}</td>
+            <td>${entry.gender || ''}</td>
+            <td>${entry.hospital || ''}</td>
+            <td>${entry.doctor || ''}</td>
+            <td>${entry.user || ''}</td>
+            <td><button class="btn btn-sm btn-danger" onclick="showDeleteEntryModal('gp', '${entry.id}')">Delete</button></td>
+        </tr>
+    `).join('');
+    displayPagination('paginationGP', filtered.length, () => displayGPEntries());
+}
+
+function displayIHCEntries() {
+    const searchText = (document.getElementById('searchIHC')?.value || '').toLowerCase();
+    
+    // Filter IHC entries by H Number, Patient Name, or Marker
+    let filtered = ihcTests;
+    if (searchText) {
+        filtered = ihcTests.filter(entry => {
+            // Search by H Number or Patient Name
+            const basicMatch = entry.hNumber?.toLowerCase().includes(searchText) ||
+                               entry.patientName?.toLowerCase().includes(searchText);
+            
+            // Search by markers in markerHistory
+            const markerMatch = entry.markerHistory?.some(history => 
+                history.markers?.some(marker => 
+                    marker.toLowerCase().includes(searchText)
+                )
+            );
+            
+            return basicMatch || markerMatch;
+        });
+    }
+    
+    const start = (currentPage - 1) * itemsPerPage;
+    const paged = filtered.slice(start, start + itemsPerPage);
+    const tbody = document.getElementById('ihcTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = paged.map(entry => {
+        // Get all unique markers from history
+        const allMarkers = [];
+        if (entry.markerHistory) {
+            entry.markerHistory.forEach(history => {
+                if (history.markers) {
+                    allMarkers.push(...history.markers);
+                }
+            });
+        }
+        const uniqueMarkers = [...new Set(allMarkers)];
+        
+        return `
+        <tr>
+            <td><strong>${entry.hNumber}</strong></td>
+            <td>${entry.patientName || ''}</td>
+            <td>${entry.age || ''}</td>
+            <td>${entry.gender || ''}</td>
+            <td>${entry.hospital || ''}</td>
+            <td>${entry.doctor || ''}</td>
+            <td>${entry.date || ''}</td>
+            <td>${entry.user || ''}</td>
+            <td>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn btn-sm btn-primary" onclick="showAddMarkersModal('${entry.id}')">Add Markers</button>
+                    <button class="btn btn-sm btn-secondary" onclick="showViewMarkersModal('${entry.id}')">View Markers</button>
+                    <button class="btn btn-sm btn-danger" onclick="showDeleteEntryModal('ihc', '${entry.id}')">Delete</button>
+                </div>
+                ${uniqueMarkers.length > 0 ? `
+                    <div style="margin-top: 8px; padding: 8px; background: var(--color-secondary); border-radius: 4px; font-size: 12px;">
+                        <strong>All Markers:</strong> ${uniqueMarkers.join(', ')}
+                    </div>
                 ` : ''}
             </td>
-        `;
-        tbody.appendChild(row);
-    });
+        </tr>
+    `;
+    }).join('');
+    displayPagination('paginationIHC', filtered.length, () => displayIHCEntries());
 }
 
-// ---------------- Search helpers (unchanged) ----------------
+function displayPagination(elementId, total, callback) {
+    const totalPages = Math.ceil(total / itemsPerPage);
+    const pagination = document.getElementById(elementId);
+    if (!pagination) return;
+    
+    pagination.innerHTML = '';
+    if (totalPages === 0) {
+        pagination.innerHTML = '<p style="text-align: center; color: #999;">No data</p>';
+        return;
+    }
+    
+    for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = i;
+        btn.className = i === currentPage ? 'active' : '';
+        btn.addEventListener('click', () => { currentPage = i; callback(); });
+        pagination.appendChild(btn);
+    }
+}
 
-function searchEntries() {
-    const patientName = document.getElementById('searchPatientName').value.toLowerCase();
-    const hNumber = document.getElementById('searchHNumber').value.toLowerCase();
+// ---------- CSV export ----------
 
-    let filteredEntries = entries.filter(entry => {
-        let matches = true;
+function downloadCSV(type) {
+    let data = [];
+    let filename = '';
+    let headers = [];
+    
+    if (type === 'h') {
+        data = hEntries;
+        filename = 'H_Entries.csv';
+        headers = ['Date', 'H Number', 'Patient Name', 'Age', 'Gender', 'Hospital', 'Doctor', 'Clinical Information', 'Containers', 'Test'];
+        
+        const csvRows = data.map(row => [
+            row.date || '',
+            row.hNumber || '',
+            row.patientName || '',
+            row.age || '',
+            row.gender || '',
+            row.hospital || '',
+            row.doctor || '',
+            `"${(row.information || '').replace(/"/g, '""')}"`,
+            row.containers || '',
+            row.test + (row.additionalTests && row.additionalTests.length > 0 ? ', ' + row.additionalTests.join(', ') : '')
+        ].join(','));
+        
+        const csv = [headers.join(','), ...csvRows].join('\n');
+        downloadFile(csv, filename);
+    } else if (type === 'cy') {
+        data = cyEntries;
+        filename = 'CY_Entries.csv';
+        headers = ['Date', 'CY Number', 'Patient Name', 'Age', 'Gender', 'Hospital', 'Doctor', 'Clinical Information', 'Test'];
+        
+        const csvRows = data.map(row => [
+            row.date || '',
+            row.cyNumber || '',
+            row.patientName || '',
+            row.age || '',
+            row.gender || '',
+            row.hospital || '',
+            row.doctor || '',
+            `"${(row.information || '').replace(/"/g, '""')}"`,
+            row.test || ''
+        ].join(','));
+        
+        const csv = [headers.join(','), ...csvRows].join('\n');
+        downloadFile(csv, filename);
+    } else if (type === 'gp') {
+        data = gpEntries;
+        filename = 'GP_Entries.csv';
+        headers = ['Date', 'GP Number', 'Patient Name', 'Age', 'Gender', 'Hospital', 'Doctor', 'Clinical Information', 'Test'];
+        
+        const csvRows = data.map(row => [
+            row.date || '',
+            row.gpNumber || '',
+            row.patientName || '',
+            row.age || '',
+            row.gender || '',
+            row.hospital || '',
+            row.doctor || '',
+            `"${(row.information || '').replace(/"/g, '""')}"`,
+            row.test || ''
+        ].join(','));
+        
+        const csv = [headers.join(','), ...csvRows].join('\n');
+        downloadFile(csv, filename);
+    }
+}
 
-        if (patientName && !entry.patientName.toLowerCase().includes(patientName)) {
-            matches = false;
+function downloadFile(content, filename) {
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+// ---------- Counters / reset ----------
+
+function showResetCounterModal(type) {
+    pendingResetCounter = type;
+    const modal = document.getElementById('resetCounterModal');
+    if (modal) modal.classList.add('active');
+}
+
+async function confirmResetCounter() {
+    const type = pendingResetCounter;
+    if (!type) return;
+    
+    let fieldId = '', fieldName = '';
+    if (type === 'hNumber') { fieldId = 'resetHValue'; fieldName = 'hCounter'; }
+    else if (type === 'cyNumber') { fieldId = 'resetCYValue'; fieldName = 'cyCounter'; }
+    else if (type === 'gpNumber') { fieldId = 'resetGPValue'; fieldName = 'gpCounter'; }
+    
+    const value = parseInt(document.getElementById(fieldId)?.value);
+    if (isNaN(value) || value < 0) { 
+        closeModal('resetCounterModal');
+        showSuccessModal('Invalid value'); 
+        return; 
+    }
+    
+    try {
+        const update = {}; 
+        update[fieldName] = value;
+        if (typeof db !== 'undefined' && db.collection) {
+            await db.collection(countersRef).doc('meta').update(update);
+        }
+        closeModal('resetCounterModal');
+        showSuccessModal('✅ Counter reset successfully');
+        const field = document.getElementById(fieldId);
+        if (field) field.value = '';
+        if (type === 'hNumber') await generateHNumber();
+        else if (type === 'cyNumber') await generateCYNumber();
+        else if (type === 'gpNumber') await generateGPNumber();
+    } catch (err) { 
+        console.error('Error:', err); 
+        closeModal('resetCounterModal');
+        showSuccessModal('❌ Error resetting counter');
+    }
+    
+    pendingResetCounter = null;
+}
+
+// ---------- Statistics ----------
+
+async function loadStatistics() {
+    if (currentRole !== 'admin') return;
+    const tH = document.getElementById('totalHEntries');
+    const tC = document.getElementById('totalCYEntries');
+    const tG = document.getElementById('totalGPEntries');
+    const tI = document.getElementById('totalIHCEntries');
+    if (tH) tH.textContent = hEntries.length;
+    if (tC) tC.textContent = cyEntries.length;
+    if (tG) tG.textContent = gpEntries.length;
+    if (tI) tI.textContent = ihcTests.length;
+}
+
+function applyStatsFilter() {
+    const fromDate = document.getElementById('statsFromDate')?.value;
+    const toDate = document.getElementById('statsToDate')?.value;
+    
+    let filtered = { h: hEntries.slice(), cy: cyEntries.slice(), gp: gpEntries.slice(), ihc: ihcTests.slice() };
+    
+    if (fromDate) {
+        filtered.h = filtered.h.filter(e => e.date >= fromDate);
+        filtered.cy = filtered.cy.filter(e => e.date >= fromDate);
+        filtered.gp = filtered.gp.filter(e => e.date >= fromDate);
+        filtered.ihc = filtered.ihc.filter(e => e.date >= fromDate);
+    }
+    
+    if (toDate) {
+        filtered.h = filtered.h.filter(e => e.date <= toDate);
+        filtered.cy = filtered.cy.filter(e => e.date <= toDate);
+        filtered.gp = filtered.gp.filter(e => e.date <= toDate);
+        filtered.ihc = filtered.ihc.filter(e => e.date <= toDate);
+    }
+    
+    const hStats = {};
+    filtered.h.forEach(e => { 
+        hStats[e.test] = (hStats[e.test] || 0) + 1;
+        if (e.additionalTests) {
+            e.additionalTests.forEach(test => {
+                hStats[test] = (hStats[test] || 0) + 1;
+            });
+        }
+    });
+    const statsHBody = document.getElementById('statsHBody');
+    if (statsHBody) statsHBody.innerHTML = Object.entries(hStats)
+        .map(([test, count]) => `<tr><td><strong>${test}</strong></td><td>${count}</td></tr>`)
+        .join('') || '<tr><td colspan="2">No data</td></tr>';
+    
+    const statsCYBody = document.getElementById('statsCYBody');
+    if (statsCYBody) statsCYBody.innerHTML = `<tr><td>${filtered.cy.length}</td></tr>`;
+    
+    const statsGPBody = document.getElementById('statsGPBody');
+    if (statsGPBody) statsGPBody.innerHTML = `<tr><td>${filtered.gp.length}</td></tr>`;
+    
+    // Collect ALL markers from ALL dates in markerHistory
+    const markerStats = {};
+    filtered.ihc.forEach(e => {
+        if (e.markerHistory && Array.isArray(e.markerHistory)) {
+            e.markerHistory.forEach(history => {
+                if (history.markers && Array.isArray(history.markers)) {
+                    history.markers.forEach(marker => {
+                        markerStats[marker] = (markerStats[marker] || 0) + 1;
+                    });
+                }
+            });
+        }
+    });
+    
+    const statsIHCBody = document.getElementById('statsIHCBody');
+    if (statsIHCBody) statsIHCBody.innerHTML = Object.entries(markerStats)
+        .sort((a, b) => b[1] - a[1])
+        .map(([marker, count]) => `<tr><td><strong>${marker}</strong></td><td>${count}</td></tr>`)
+        .join('') || '<tr><td colspan="2">No markers data</td></tr>';
+}
+
+// ---------- Page navigation ----------
+
+function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const page = document.getElementById(pageId + 'Page');
+    if (page) page.classList.add('active');
+    
+    currentPage = 1;
+    
+    if (pageId === 'search') {
+        const searchInput = document.getElementById('searchH');
+        if (searchInput) {
+            searchInput.removeEventListener('input', displayHEntries);
+            searchInput.addEventListener('input', displayHEntries);
+        }
+        displayHEntries();
+    } else if (pageId === 'cytologyPatients') {
+        const searchInput = document.getElementById('searchCY');
+        if (searchInput) {
+            searchInput.removeEventListener('input', displayCYEntries);
+            searchInput.addEventListener('input', displayCYEntries);
+        }
+        displayCYEntries();
+    } else if (pageId === 'gpPatients') {
+        const searchInput = document.getElementById('searchGP');
+        if (searchInput) {
+            searchInput.removeEventListener('input', displayGPEntries);
+            searchInput.addEventListener('input', displayGPEntries);
+        }
+        displayGPEntries();
+    } else if (pageId === 'ihc') {
+        const searchInput = document.getElementById('searchIHC');
+        if (searchInput) {
+            searchInput.removeEventListener('input', displayIHCEntries);
+            searchInput.addEventListener('input', displayIHCEntries);
+        }
+        displayIHCEntries();
+    } else if (pageId === 'statistics') {
+        applyStatsFilter();
+    } else if (pageId === 'admin') {
+        populateGoogleSheetsConfig();
+    }
+}
+
+// ---------- Small utilities ----------
+
+function setTodayDate() {
+    const today = new Date().toISOString().split('T')[0];
+    if (document.getElementById('entryDate')) document.getElementById('entryDate').value = today;
+    if (document.getElementById('cyEntryDate')) document.getElementById('cyEntryDate').value = today;
+    if (document.getElementById('gpEntryDate')) document.getElementById('gpEntryDate').value = today;
+}
+
+function resetForm() {
+    document.getElementById('patientForm')?.reset();
+    additionalTests = [];
+    const addBlock = document.getElementById('additionalTests');
+    if (addBlock) addBlock.style.display = 'none';
+    setTodayDate();
+    generateHNumber();
+}
+
+function resetCytologyForm() {
+    document.getElementById('cytologyForm')?.reset();
+    setTodayDate();
+    generateCYNumber();
+}
+
+function resetGPForm() {
+    document.getElementById('gpForm')?.reset();
+    setTodayDate();
+    generateGPNumber();
+}
+
+// ---------- Deletions ----------
+
+function showDeleteEntryModal(type, id) {
+    pendingDeleteEntry = { type, id };
+    const modal = document.getElementById('deleteEntryModal');
+    if (modal) modal.classList.add('active');
+}
+
+async function confirmDeleteEntry() {
+    if (!pendingDeleteEntry) return;
+    
+    const { type, id } = pendingDeleteEntry;
+    
+    try {
+        if (typeof db !== 'undefined' && db.collection) {
+            if (type === 'h') {
+                await db.collection(hEntriesRef).doc(id).delete();
+            } else if (type === 'cy') {
+                await db.collection(cyEntriesRef).doc(id).delete();
+            } else if (type === 'gp') {
+                await db.collection(gpEntriesRef).doc(id).delete();
+            } else if (type === 'ihc') {
+                await db.collection(ihcTestsRef).doc(id).delete();
+            }
+            await loadAllData();
         }
 
-        if (hNumber && !entry.hNumber.toLowerCase().includes(hNumber)) {
-            matches = false;
-        }
+        if (type === 'h') hEntries = hEntries.filter(e => e.id !== id);
+        else if (type === 'cy') cyEntries = cyEntries.filter(e => e.id !== id);
+        else if (type === 'gp') gpEntries = gpEntries.filter(e => e.id !== id);
+        else if (type === 'ihc') ihcTests = ihcTests.filter(e => e.id !== id);
 
-        if (currentRole === 'admin') {
-            const hospital = document.getElementById('searchHospital').value.toLowerCase();
-            const test = document.getElementById('searchTest').value.toLowerCase();
-            const date = document.getElementById('searchDate').value;
-
-            if (hospital && !entry.hospital.toLowerCase().includes(hospital)) {
-                matches = false;
-            }
-
-            if (test && !entry.test.toLowerCase().includes(test)) {
-                matches = false;
-            }
-
-            if (date && entry.date !== new Date(date).toLocaleDateString('en-GB')) {
-                matches = false;
-            }
-        }
-
-        return matches;
-    });
-
-    displayEntries(filteredEntries);
-}
-
-function clearSearch() {
-    document.getElementById('searchPatientName').value = '';
-    document.getElementById('searchHNumber').value = '';
-    if (currentRole === 'admin') {
-        document.getElementById('searchHospital').value = '';
-        document.getElementById('searchTest').value = '';
-        document.getElementById('searchDate').value = '';
+        displayHEntries();
+        displayCYEntries();
+        displayGPEntries();
+        displayIHCEntries();
+        
+        closeModal('deleteEntryModal');
+        showSuccessModal('✅ Entry deleted successfully');
+    } catch (err) { 
+        console.error('Error:', err); 
+        closeModal('deleteEntryModal');
+        showSuccessModal('❌ Error deleting entry');
     }
-    displayEntries(entries);
+    
+    pendingDeleteEntry = null;
 }
 
-// ---------------- Edit / Delete helpers (partial conversion) ----------------
+// ---------- Modals ----------
 
-async function editEntryById(docId) {
-    editingIndex = -1;
-    // open a modal or use the same form to edit — here's a simple prompt-based fallback
-    const docRef = db.collection('entries').doc(docId);
-    const snap = await docRef.get();
-    if (!snap.exists) { alert('Entry not found'); return; }
-    const data = snap.data();
-
-    // Example simple edit flow (you can replace with a modal)
-    const newPatientName = prompt('Edit patient name:', data.patientName);
-    if (newPatientName === null) return;
-    await docRef.update({ patientName: newPatientName });
-    // refresh local list
-    await loadStoredData();
-    displayEntries(entries);
-}
-
-async function deleteEntryById(docId) {
-    if (!confirm('Are you sure you want to delete this entry?')) return;
-    try {
-        await db.collection('entries').doc(docId).delete();
-        await loadStoredData();
-        displayEntries(entries);
-    } catch (err) {
-        console.error('Error deleting entry:', err);
-        alert('Failed to delete entry.');
+function showSuccessModal(message) {
+    const modal = document.getElementById('successModal');
+    const msgDiv = document.getElementById('successMessage');
+    if (modal && msgDiv) { 
+        msgDiv.textContent = message; 
+        modal.classList.add('active'); 
     }
 }
 
-// Add-on placeholder (admin)
-async function addonEntryById(docId) {
-    addonIndex = docId;
-    // Implement add-on logic if needed. For now just an alert.
-    alert('Add-on clicked for doc: ' + docId);
-}
-
-// ---------------- Admin + Logs pages helpers ----------------
-
-async function loadAdminPage() {
-    await updateAdminStats();
-}
-
-async function updateAdminStats() {
-    try {
-        const entriesSnap = await db.collection('entries').get();
-        document.getElementById('totalEntries').textContent = entriesSnap.size;
-    } catch (err) {
-        console.error('Error fetching entries count', err);
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.classList.remove('active');
+    
+    if (modalId === 'addMarkersModal') {
+        selectedMarkers = [];
+        const input = document.getElementById('ihcMarkerInput');
+        if (input) input.value = '';
+    }
+    
+    if (modalId === 'deleteEntryModal') {
+        pendingDeleteEntry = null;
+    }
+    
+    if (modalId === 'resetCounterModal') {
+        pendingResetCounter = null;
     }
 }
 
-function loadLoginActivity() {
-    const tbody = document.getElementById('loginActivityTable');
-    tbody.innerHTML = '';
-
-    loginActivity.forEach(item => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${item.username}</td>
-            <td>${item.name || ''}</td>
-            <td>${item.role}</td>
-            <td>${new Date(item.timestamp).toLocaleString()}</td>
-            <td>${item.status}</td>
-        `;
-        tbody.appendChild(row);
-    });
-
-    // Update totalLogins
-    document.getElementById('totalLogins').textContent = loginActivity.length;
-}
-
-// ---------------- Export & other utilities ----------------
-
-function exportToCSV() {
-    const data = entries;
-    if (!data.length) { alert('No entries to export'); return; }
-
-    const header = ['H Number','Date','Patient Name','Age','Gender','Hospital','Doctor','Test','User','Containers','Information'];
-    const csvRows = [header.join(',')];
-
-    data.forEach(row => {
-        const vals = [
-            `"${row.hNumber || ''}"`,
-            `"${row.date || ''}"`,
-            `"${(row.patientName || '').replace(/"/g, '""')}"`,
-            `"${row.age || ''}"`,
-            `"${row.gender || ''}"`,
-            `"${(row.hospital || '').replace(/"/g, '""')}"`,
-            `"${(row.doctor || '').replace(/"/g, '""')}"`,
-            `"${row.test || ''}"`,
-            `"${row.username || ''}"`,
-            `"${row.containers || ''}"`,
-            `"${(row.information || '').replace(/"/g, '""')}"`
-        ];
-        csvRows.push(vals.join(','));
-    });
-
-    const csvContent = csvRows.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `phoenix_entries_${new Date().toISOString().slice(0,10)}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-async function exportAllData() {
-    // Export entries only for now
-    exportToCSV();
-}
-
-async function clearAllLogs() {
-    if (!confirm('Clear all login logs from Firestore?')) return;
-    try {
-        const snaps = await db.collection('loginActivity').get();
-        const batch = db.batch();
-        snaps.forEach(doc => batch.delete(doc.ref));
-        await batch.commit();
-        loginActivity = [];
-        loadLoginActivity();
-        alert('All logs cleared.');
-    } catch (err) {
-        console.error('Error clearing logs:', err);
-        alert('Failed to clear logs.');
-    }
-}
-
-async function resetHNumberCounter() {
-    if (!confirm('Reset H-number counter to 1312?')) return;
-    try {
-        await db.collection('meta').doc('counters').set({ phoenixHNumberCounter: 1312 });
-        await generateHNumber();
-        alert('H-number counter reset.');
-    } catch (err) {
-        console.error('Error resetting counter:', err);
-        alert('Failed to reset counter.');
-    }
-}
-
-// ---------------- Logout ----------------
-
-function logout() {
-    sessionStorage.removeItem('phoenixCurrentUser');
-    sessionStorage.removeItem('phoenixCurrentRole');
-    sessionStorage.removeItem('phoenixCurrentName');
-    currentUser = null;
-    currentRole = null;
-    showPage('login');
-    alert('Logged out.');
-}
-
-// ---------------- Minimal edit modal placeholder to keep references working ----------------
-// (Your original edit modal HTML can be re-integrated with these functions)
-function editEntry(index) {
-    // keep compatibility if other code calls editEntry(index)
-    alert('Please use the table edit button to edit (Firestore-backed).');
-}
-
-/* end of app.js */
+// End of file
