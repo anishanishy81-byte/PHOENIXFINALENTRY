@@ -3,362 +3,854 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phoenix Oncopathology - Patient Data Management</title>
+    <title>Phoenix Oncopathology - Advanced Patient Management</title>
+    <link rel="icon" type="image/png" href="ASSETS/fav.png">
     <link rel="stylesheet" href="style.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Navigation Header -->
+    <!-- Background Video for Login Page Only -->
+    <video autoplay muted loop class="login-bg-video" id="loginBgVideo">
+        <source src="ASSETS/bg-vid.mp4" type="video/mp4">
+    </video>
+
+    <!-- Navigation Bar -->
     <nav class="navbar hidden" id="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <div class="logo-placeholder">
-                    <i class="fas fa-dna"></i>
-                </div>
-                <span class="brand-text">Phoenix Oncopathology</span>
-            </div>
-            <div class="nav-menu">
-                <a href="#" class="nav-link" onclick="showPage('home')">
-                    <i class="fas fa-plus-circle"></i> Entry
-                </a>
-                <a href="#" class="nav-link" onclick="showPage('search')">
-                    <i class="fas fa-search"></i> Records
-                </a>
-                <a href="#" class="nav-link admin-only" onclick="showPage('admin')">
-                    <i class="fas fa-users-cog"></i> Admin
-                </a>
-                <a href="#" class="nav-link admin-only" onclick="showPage('logs')">
-                    <i class="fas fa-history"></i> Logs
-                </a>
-                <div class="user-info">
-                    <span class="user-name" id="currentUserName">User</span>
-                    <span class="user-role" id="currentUserRole">Role</span>
-                </div>
-                <a href="#" class="nav-link" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
+        <div class="navbar-brand">
+            <img src="ASSETS/fav.png" alt="Logo">
+            Phoenix Oncopathology
+        </div>
+        <ul class="navbar-menu">
+            <li><a onclick="showPage('home')">Home (H)</a></li>
+            <li><a onclick="showPage('cytology')">Cytology (CY)</a></li>
+            <li><a onclick="showPage('gp')">GP</a></li>
+            <li><a onclick="showPage('search')">Patients H</a></li>
+            <li><a onclick="showPage('cytologyPatients')">Patients CY</a></li>
+            <li><a onclick="showPage('gpPatients')">Patients GP</a></li>
+            <li><a onclick="showPage('ihc')">IHC Tests</a></li>
+            <li><a onclick="showPage('statistics')">Statistics</a></li>
+            <li class="admin-only" style="display:none;"><a onclick="showPage('admin')">Admin</a></li>
+            <li><a onclick="showLogoutModal()">Logout</a></li>
+        </ul>
+        <div class="navbar-user">
+            <div class="user-info">
+                <div class="user-name" id="currentUserName">User</div>
+                <div class="user-role" id="currentUserRole">Role</div>
             </div>
         </div>
     </nav>
 
-    <!-- Login Page -->
-    <div id="loginPage" class="page active">
-        <div class="login-container">
-            <div class="login-card">
-                <div class="login-header">
-                    <div class="logo-large">
-                        <i class="fas fa-dna"></i>
+    <!-- Main Container -->
+    <div class="container">
+        <!-- LOGIN PAGE -->
+        <div class="page active" id="loginPage">
+            <div class="login-wrapper">
+                <div class="login-overlay"></div>
+                
+                <div class="login-content">
+                    <div class="login-text-left">
+                        <h2>Welcome to Phoenix Oncopathology</h2>
+                        <p>Advanced patient data management system for oncological pathology diagnosis and tracking.</p>
+                        <p style="margin-top: 20px; font-size: 14px; color: rgba(255,255,255,0.7);">
+                            ✓ Real-time data sync<br>
+                            ✓ Multi-user support<br>
+                            ✓ Comprehensive analytics<br>
+                            ✓ Secure cloud backup
+                        </p>
                     </div>
-                    <h1>Phoenix Oncopathology</h1>
-                    <p>Professional Oncological Pathology Data Management System</p>
-                </div>
-                <form id="loginForm" class="login-form">
-                    <div class="form-group">
-                        <label class="form-label">Username</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-user input-icon"></i>
-                            <input type="text" id="username" class="form-control engraved" placeholder="Enter username" required>
+                    
+                    <div class="login-card">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <img src="ASSETS/fav.png" alt="Logo" style="height: 80px; width: 80px; margin-bottom: 10px;">
+                            <h1 style="margin: 0;">Phoenix</h1>
+                            <p style="margin: 5px 0; color: #2180A8; font-size: 14px;">Oncopathology Management</p>
                         </div>
+                        
+                        <form id="loginForm">
+                            <div class="form-group">
+                                <label class="form-label">Username</label>
+                                <input type="text" id="username" class="form-control" required autofocus>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Password</label>
+                                <input type="password" id="password" class="form-control" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-full">Login</button>
+                        </form>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Password</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-lock input-icon"></i>
-                            <input type="password" id="password" class="form-control engraved" placeholder="Enter password" required>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn--primary btn--full-width btn-premium">
-                        <i class="fas fa-sign-in-alt"></i>
-                        Sign In
-                    </button>
-                </form>
-                <div class="login-help">
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Home Page - Data Entry -->
-    <div id="homePage" class="page">
-        <div class="container">
-            <div class="page-header">
-                <h1><i class="fas fa-plus-circle"></i> Patient Data Entry</h1>
-                <p>Enter new patient oncological pathology information</p>
-            </div>
-            
-            <div class="entry-card">
-                <form id="patientForm" class="patient-form">
+        <!-- HOME PAGE - H NUMBER ENTRY -->
+        <div class="page" id="homePage">
+            <h1>Patient Entry - H Number</h1>
+            <div class="card">
+                <form id="patientForm">
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">H Number</label>
-                            <input type="text" id="hNumber" class="form-control engraved" readonly>
-                            <small class="form-help">This number will increment only after successful save</small>
+                            <input type="text" id="hNumber" class="form-control" readonly>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Date</label>
-                            <input type="text" id="entryDate" class="form-control engraved" readonly>
+                            <input type="date" id="entryDate" class="form-control" readonly>
                         </div>
                     </div>
-
+                    
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Patient Name</label>
-                            <input type="text" id="patientName" class="form-control engraved" placeholder="Enter patient name" required>
+                            <input type="text" id="patientName" class="form-control" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Age</label>
-                            <input type="number" id="age" class="form-control engraved" placeholder="Age" min="0" max="150" required>
+                            <input type="number" id="age" class="form-control" required min="0" max="150">
                         </div>
+                    </div>
+                    
+                    <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Gender</label>
-                            <select id="gender" class="form-control engraved" required>
+                            <select id="gender" class="form-control" required>
                                 <option value="">Select Gender</option>
                                 <option value="Male">Male</option>
                                 <option value="Female">Female</option>
                                 <option value="Other">Other</option>
                             </select>
                         </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group dropdown-group">
-                            <label class="form-label">Hospital Name</label>
-                            <div class="searchable-dropdown">
-                                <input type="text" id="hospitalInput" class="form-control engraved" placeholder="Search hospital..." required>
-                                <div class="dropdown-list" id="hospitalDropdown"></div>
-                                <button type="button" class="add-new-btn" onclick="addNewHospital()">
-                                    <i class="fas fa-plus"></i> Add New
-                                </button>
-                            </div>
-                        </div>
-                        <div class="form-group dropdown-group">
-                            <label class="form-label">Doctor Name</label>
-                            <div class="searchable-dropdown">
-                                <input type="text" id="doctorInput" class="form-control engraved" placeholder="Search doctor..." required>
-                                <div class="dropdown-list" id="doctorDropdown"></div>
-                                <button type="button" class="add-new-btn" onclick="addNewDoctor()">
-                                    <i class="fas fa-plus"></i> Add New
-                                </button>
+                        <div class="form-group">
+                            <label class="form-label">Hospital</label>
+                            <div class="dropdown-wrapper" style="display: flex; gap: 8px;">
+                                <input type="text" id="hospitalInput" class="form-control searchable-input" placeholder="Type to search..." required autocomplete="off" style="flex: 1;">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="showAddHospitalModal('h')" style="white-space: nowrap;">➕ Add</button>
+                                <ul class="dropdown-list" id="hospitalDropdown"></ul>
                             </div>
                         </div>
                     </div>
-
-                    <div class="form-row">
-                        <div class="form-group full-width">
-                            <label class="form-label">Information</label>
-                            <textarea id="information" class="form-control engraved" rows="4" placeholder="Enter received information..."></textarea>
-                        </div>
-                    </div>
-
+                    
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">Containers</label>
-                            <input type="text" id="containers" class="form-control engraved" placeholder="Number of containers" min="0" required>
+                            <label class="form-label">Doctor Name</label>
+                            <div class="dropdown-wrapper" style="display: flex; gap: 8px;">
+                                <input type="text" id="doctorInput" class="form-control searchable-input" placeholder="Type to search..." required autocomplete="off" style="flex: 1;">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="showAddDoctorModal('h')" style="white-space: nowrap;">➕ Add</button>
+                                <ul class="dropdown-list" id="doctorDropdown"></ul>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Test Type</label>
-                            <select id="testType" class="form-control engraved" required>
+                            <select id="testType" class="form-control" required>
                                 <option value="">Select Test</option>
-                                <option value="SMALL">SMALL</option>
-                                <option value="MEDIUM">MEDIUM</option>
-                                <option value="LARGE">LARGE</option>
-                                <option value="EXTRA LARGE">EXTRA LARGE</option>
+                                <option value="Small">Small</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Large">Large</option>
+                                <option value="Extra Large">Extra Large</option>
                                 <option value="IHC">IHC</option>
-                                <option value="EXPERT OPINION">EXPERT OPINION</option>
-                                <option value="MSI">MSI</option>
-                                <option value="BLANK">BLANK</option>
+                                <option value="Expert Opinion">Expert Opinion</option>
                             </select>
                         </div>
                     </div>
-
-                    <!-- Google Sheets Configuration -->
-                    <div class="form-row admin-only">
-                        <div class="form-group full-width">
-                            <label class="form-label">Google Sheets URL (Admin Only)</label>
-                            <input type="url" id="googleSheetUrl" class="form-control engraved" 
-                                   placeholder="https://script.google.com/macros/s/AKfycbx.../exec" 
-                                   value="https://script.google.com/macros/s/AKfycbx1383kJqeD8hTxyXQneTva9t_yoNJqaekwnWZTlE-D-SpzQbVle9WYoPIwRpL5sJg/exec">
-                            <small class="form-help">https://script.google.com/macros/s/AKfycbx1383kJqeD8hTxyXQneTva9t_yoNJqaekwnWZTlE-D-SpzQbVle9WYoPIwRpL5sJg/exec</small>
-                        </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Clinical Information</label>
+                        <textarea id="information" class="form-control" rows="4"></textarea>
                     </div>
-
-                    <div class="form-actions">
-                        <button type="button" class="btn btn--secondary" onclick="resetForm()">
-                            <i class="fas fa-redo"></i> Reset
-                        </button>
-                        <button type="submit" class="btn btn--primary btn-premium">
-                            <i class="fas fa-save"></i> Save Entry
-                        </button>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Containers/Specimens</label>
+                        <input type="number" id="containers" class="form-control" required min="1">
+                    </div>
+                    
+                    <div id="additionalTests" style="margin: 20px 0; padding: 20px; background: rgba(33, 128, 141, 0.08); border-radius: 8px; display: none; border: 1px solid rgba(33, 128, 141, 0.2);">
+                        <h4 style="margin-top: 0;">Additional Tests</h4>
+                        <div id="additionalTestsList"></div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1; min-width: 120px;">💾 Save Entry</button>
+                        <button type="button" class="btn btn-secondary" onclick="showAddTestModal()" style="flex: 1; min-width: 120px;">➕ Add Test</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()" style="flex: 1; min-width: 120px;">🔄 Reset</button>
                     </div>
                 </form>
             </div>
         </div>
-    </div>
 
-    <!-- Search Page -->
-    <div id="searchPage" class="page">
-        <div class="container">
-            <div class="page-header">
-                <h1><i class="fas fa-search"></i> Patient Records</h1>
-                <p>Search and manage oncological pathology entries</p>
+        <!-- CYTOLOGY ENTRY PAGE -->
+        <div class="page" id="cytologyPage">
+            <h1>Cytology Entry - CY Number</h1>
+            <div class="card">
+                <form id="cytologyForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">CY Number</label>
+                            <input type="text" id="cyNumber" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date</label>
+                            <input type="date" id="cyEntryDate" class="form-control" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Patient Name</label>
+                            <input type="text" id="cyPatientName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Age</label>
+                            <input type="number" id="cyAge" class="form-control" required min="0" max="150">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Gender</label>
+                            <select id="cyGender" class="form-control" required>
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Hospital</label>
+                            <div class="dropdown-wrapper" style="display: flex; gap: 8px;">
+                                <input type="text" id="cyHospitalInput" class="form-control searchable-input" placeholder="Type to search..." required autocomplete="off" style="flex: 1;">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="showAddHospitalModal('cy')" style="white-space: nowrap;">➕ Add</button>
+                                <ul class="dropdown-list" id="cyHospitalDropdown"></ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Doctor Name</label>
+                            <div class="dropdown-wrapper" style="display: flex; gap: 8px;">
+                                <input type="text" id="cyDoctorInput" class="form-control searchable-input" placeholder="Type to search..." required autocomplete="off" style="flex: 1;">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="showAddDoctorModal('cy')" style="white-space: nowrap;">➕ Add</button>
+                                <ul class="dropdown-list" id="cyDoctorDropdown"></ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Clinical Information</label>
+                        <textarea id="cyInformation" class="form-control" rows="4"></textarea>
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1; min-width: 120px;">💾 Save Entry</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetCytologyForm()" style="flex: 1; min-width: 120px;">🔄 Reset</button>
+                    </div>
+                </form>
             </div>
+        </div>
 
-            <div class="search-card">
-                <div class="search-filters">
-                    <div class="filter-group">
-                        <input type="text" id="searchPatientName" class="form-control" placeholder="Patient Name">
-                        <input type="text" id="searchHNumber" class="form-control" placeholder="H Number">
+        <!-- GP ENTRY PAGE -->
+        <div class="page" id="gpPage">
+            <h1>GP Entry - GP Number</h1>
+            <div class="card">
+                <form id="gpForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">GP Number</label>
+                            <input type="text" id="gpNumber" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date</label>
+                            <input type="date" id="gpEntryDate" class="form-control" readonly>
+                        </div>
                     </div>
-                    <div class="filter-group admin-only">
-                        <input type="text" id="searchHospital" class="form-control" placeholder="Hospital Name">
-                        <input type="text" id="searchTest" class="form-control" placeholder="Test Type">
-                        <input type="date" id="searchDate" class="form-control">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Patient Name</label>
+                            <input type="text" id="gpPatientName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Age</label>
+                            <input type="number" id="gpAge" class="form-control" required min="0" max="150">
+                        </div>
                     </div>
-                    <div class="filter-actions">
-                        <button class="btn btn--primary" onclick="searchEntries()">
-                            <i class="fas fa-search"></i> Search
-                        </button>
-                        <button class="btn btn--secondary" onclick="clearSearch()">
-                            <i class="fas fa-times"></i> Clear
-                        </button>
-                        <button class="btn btn--outline" onclick="exportToCSV()">
-                            <i class="fas fa-download"></i> Export CSV
-                        </button>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Gender</label>
+                            <select id="gpGender" class="form-control" required>
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Hospital</label>
+                            <div class="dropdown-wrapper" style="display: flex; gap: 8px;">
+                                <input type="text" id="gpHospitalInput" class="form-control searchable-input" placeholder="Type to search..." required autocomplete="off" style="flex: 1;">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="showAddHospitalModal('gp')" style="white-space: nowrap;">➕ Add</button>
+                                <ul class="dropdown-list" id="gpHospitalDropdown"></ul>
+                            </div>
+                        </div>
                     </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Doctor Name</label>
+                            <div class="dropdown-wrapper" style="display: flex; gap: 8px;">
+                                <input type="text" id="gpDoctorInput" class="form-control searchable-input" placeholder="Type to search..." required autocomplete="off" style="flex: 1;">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="showAddDoctorModal('gp')" style="white-space: nowrap;">➕ Add</button>
+                                <ul class="dropdown-list" id="gpDoctorDropdown"></ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Clinical Information</label>
+                        <textarea id="gpInformation" class="form-control" rows="4"></textarea>
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1; min-width: 120px;">💾 Save Entry</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetGPForm()" style="flex: 1; min-width: 120px;">🔄 Reset</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- H PATIENTS PAGE -->
+        <div class="page" id="searchPage">
+            <h1>Patient List - H Number</h1>
+            <div class="card">
+                <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <input type="text" id="searchH" class="form-control" placeholder="🔍 Search..." style="flex: 1; min-width: 200px;">
+                    <button class="btn btn-primary" onclick="downloadCSV('h')">📥 Download CSV</button>
                 </div>
-
-                <div class="table-container">
-                    <table id="entriesTable" class="entries-table">
+                <div style="overflow-x: auto;">
+                    <table class="table">
                         <thead>
                             <tr>
-                                <th>H Number</th>
-                                <th>Date</th>
-                                <th>Patient Name</th>
-                                <th>Age</th>
-                                <th>Gender</th>
-                                <th>Hospital</th>
-                                <th>Doctor</th>
-                                <th>Test</th>
-                                <th>User</th>
-                                <th>Actions</th>
+                                <th>H Number</th><th>Date</th><th>Patient Name</th><th>Age</th><th>Gender</th><th>Hospital</th><th>Doctor</th><th>Test</th><th>User</th><th>Action</th>
                             </tr>
                         </thead>
-                        <tbody id="entriesTableBody">
-                        </tbody>
+                        <tbody id="entriesTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="paginationH"></div>
+            </div>
+        </div>
+
+        <!-- CY PATIENTS PAGE -->
+        <div class="page" id="cytologyPatientsPage">
+            <h1>Patient List - Cytology (CY)</h1>
+            <div class="card">
+                <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <input type="text" id="searchCY" class="form-control" placeholder="🔍 Search..." style="flex: 1; min-width: 200px;">
+                    <button class="btn btn-primary" onclick="downloadCSV('cy')">📥 Download CSV</button>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>CY Number</th><th>Date</th><th>Patient Name</th><th>Age</th><th>Gender</th><th>Hospital</th><th>Doctor</th><th>User</th><th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cytologyTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="paginationCY"></div>
+            </div>
+        </div>
+
+        <!-- GP PATIENTS PAGE -->
+        <div class="page" id="gpPatientsPage">
+            <h1>Patient List - GP</h1>
+            <div class="card">
+                <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <input type="text" id="searchGP" class="form-control" placeholder="🔍 Search..." style="flex: 1; min-width: 200px;">
+                    <button class="btn btn-primary" onclick="downloadCSV('gp')">📥 Download CSV</button>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>GP Number</th><th>Date</th><th>Patient Name</th><th>Age</th><th>Gender</th><th>Hospital</th><th>Doctor</th><th>User</th><th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gpTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="paginationGP"></div>
+            </div>
+        </div>
+
+        <!-- IHC PAGE -->
+        <div class="page" id="ihcPage">
+            <h1>IHC Tests Management</h1>
+            <div class="card">
+                <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <input type="text" id="searchIHC" class="form-control" placeholder="🔍 Search by H Number, Patient Name, or Marker..." style="flex: 1; min-width: 200px;">
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>H Number</th><th>Patient Name</th><th>Age</th><th>Gender</th><th>Hospital</th><th>Doctor</th><th>Date</th><th>User</th><th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ihcTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="paginationIHC"></div>
+            </div>
+        </div>
+
+        <!-- STATISTICS PAGE -->
+        <div class="page" id="statisticsPage">
+            <h1>Statistics & Analytics</h1>
+            
+            <div class="card">
+                <h3>📊 Filter Data</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">From Date</label>
+                        <input type="date" id="statsFromDate" class="form-control">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">To Date</label>
+                        <input type="date" id="statsToDate" class="form-control">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button class="btn btn-primary" onclick="applyStatsFilter()" style="width: 100%;">Apply</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>H Number - Test Wise Distribution</h3>
+                <div style="overflow-x: auto;">
+                    <table class="table">
+                        <thead><tr><th>Test Type</th><th>Count</th></tr></thead>
+                        <tbody id="statsHBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Cytology (CY) - Total Count</h3>
+                <div style="overflow-x: auto;">
+                    <table class="table">
+                        <thead><tr><th>Total Entries</th></tr></thead>
+                        <tbody id="statsCYBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>GP - Total Count</h3>
+                <div style="overflow-x: auto;">
+                    <table class="table">
+                        <thead><tr><th>Total Entries</th></tr></thead>
+                        <tbody id="statsGPBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>IHC Markers - Usage Statistics</h3>
+                <div style="overflow-x: auto;">
+                    <table class="table">
+                        <thead><tr><th>Marker Name</th><th>Usage Count</th></tr></thead>
+                        <tbody id="statsIHCBody"></tbody>
                     </table>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Admin Page -->
-    <div id="adminPage" class="page">
-        <div class="container">
-            <div class="page-header">
-                <h1><i class="fas fa-users-cog"></i> Admin Dashboard</h1>
-                <p>System administration and management controls</p>
+        <!-- ADMIN PAGE -->
+        <div class="page" id="adminPage">
+            <h1>Admin Panel</h1>
+
+            <!-- Google Sheets Integration Configuration -->
+            <div class="card">
+                <h3>📊 Google Sheets Integration</h3>
+                <p style="margin-bottom: 20px; color: var(--color-text-light); font-size: 14px;">
+                    Configure separate Google Sheets Web App URLs for each entry type. Each type will be saved to its own dedicated spreadsheet.
+                </p>
+                
+                <div class="form-group">
+                    <label class="form-label">H Number Sheet URL</label>
+                    <input type="url" id="hNumberSheetUrl" class="form-control" placeholder="https://script.google.com/macros/s/YOUR_H_DEPLOYMENT_ID/exec">
+                    <small style="color: var(--color-text-light); display: block; margin-top: 6px;">
+                        Deploy the Apps Script to a NEW spreadsheet for H Number entries
+                    </small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">CY Number Sheet URL</label>
+                    <input type="url" id="cyNumberSheetUrl" class="form-control" placeholder="https://script.google.com/macros/s/YOUR_CY_DEPLOYMENT_ID/exec">
+                    <small style="color: var(--color-text-light); display: block; margin-top: 6px;">
+                        Deploy the Apps Script to a NEW spreadsheet for CY Number entries
+                    </small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">GP Number Sheet URL</label>
+                    <input type="url" id="gpNumberSheetUrl" class="form-control" placeholder="https://script.google.com/macros/s/YOUR_GP_DEPLOYMENT_ID/exec">
+                    <small style="color: var(--color-text-light); display: block; margin-top: 6px;">
+                        Deploy the Apps Script to a NEW spreadsheet for GP Number entries
+                    </small>
+                </div>
+                
+                <button class="btn btn-primary" onclick="saveGoogleSheetsConfig()">💾 Save Configuration</button>
+                
+                <div class="admin-instructions">
+                    <h4>📝 Setup Instructions:</h4>
+                    <ol style="margin: 8px 0; padding-left: 20px; line-height: 1.8;">
+                        <li><strong>Create THREE separate Google Spreadsheets</strong> - one for H, one for CY, and one for GP</li>
+                        <li>For EACH spreadsheet, go to Extensions → Apps Script</li>
+                        <li>Paste the Apps Script code provided below (same code for all three)</li>
+                        <li>Deploy as Web App (Execute as: Me, Access: Anyone)</li>
+                        <li>Copy each Web App URL and paste in the corresponding field above</li>
+                        <li>The script will automatically create headers and save data to each spreadsheet</li>
+                    </ol>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.5); border-radius: 8px; border: 1px solid var(--color-border);">
+                        <h4 style="margin-top: 0; color: var(--color-primary);">📋 Google Apps Script Code (Use for all 3 spreadsheets):</h4>
+                        <pre style="background: #f5f5f5; padding: 15px; border-radius: 6px; overflow-x: auto; font-size: 12px; line-height: 1.5;"><code>function doPost(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var data = JSON.parse(e.postData.contents);
+    
+    // Initialize headers if sheet is empty
+    if (sheet.getLastRow() === 0) {
+      var headers = ['Date', 'Number', 'Patient Name', 'Age', 'Gender', 'Hospital', 'Doctor', 'Clinical Information', 'Containers', 'Test'];
+      sheet.appendRow(headers);
+      sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#21808D').setFontColor('#FFFFFF');
+    }
+    
+    // Prepare row data based on type
+    var rowData = [
+      data.date || '',
+      data.hNumber || data.cyNumber || data.gpNumber || '',
+      data.patientName || '',
+      data.age || '',
+      data.gender || '',
+      data.hospital || '',
+      data.doctor || '',
+      data.information || '',
+      data.containers || '',
+      data.test || ''
+    ];
+    
+    sheet.appendRow(rowData);
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      'status': 'success',
+      'message': 'Data saved successfully'
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      'status': 'error',
+      'message': error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}</code></pre>
+                        <button class="btn btn-secondary btn-sm" onclick="copyScriptToClipboard()" style="margin-top: 10px;">📋 Copy Script</button>
+                    </div>
+                </div>
             </div>
 
-            <div class="admin-stats">
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-file-medical"></i>
+            <!-- Reset Counters Section -->
+            <div class="card">
+                <h3>🔢 Reset Counters</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                    <div>
+                        <label class="form-label">Reset H Number</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="number" id="resetHValue" class="form-control" placeholder="Enter number" min="0">
+                            <button class="btn btn-primary" onclick="showResetCounterModal('hNumber')">Reset</button>
+                        </div>
                     </div>
-                    <div class="stat-info">
-                        <h3 id="totalEntries">0</h3>
-                        <p>Total Entries</p>
+                    <div>
+                        <label class="form-label">Reset CY Number</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="number" id="resetCYValue" class="form-control" placeholder="Enter number" min="0">
+                            <button class="btn btn-primary" onclick="showResetCounterModal('cyNumber')">Reset</button>
+                        </div>
                     </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-users"></i>
+                    <div>
+                        <label class="form-label">Reset GP Number</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="number" id="resetGPValue" class="form-control" placeholder="Enter number" min="0">
+                            <button class="btn btn-primary" onclick="showResetCounterModal('gpNumber')">Reset</button>
+                        </div>
                     </div>
-                    <div class="stat-info">
-                        <h3 id="totalUsers">5</h3>
-                        <p>Total Users</p>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-history"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 id="totalLogins">0</h3>
-                        <p>Total Logins</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="admin-controls">
-                <h2><i class="fas fa-cogs"></i> Admin Controls</h2>
-                <div class="control-actions">
-                    <button class="btn btn--primary" onclick="resetHNumberCounter()">
-                        <i class="fas fa-redo"></i> Reset H Number Counter
-                    </button>
-                    <button class="btn btn--outline" onclick="exportAllData()">
-                        <i class="fas fa-download"></i> Export All Data
-                    </button>
-                    <button class="btn btn--secondary" onclick="clearAllLogs()">
-                        <i class="fas fa-trash"></i> Clear Login Logs
-                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Logs Page (Admin Only) -->
-    <div id="logsPage" class="page">
-        <div class="container">
-            <div class="page-header">
-                <h1><i class="fas fa-history"></i> Login Activity Logs</h1>
-                <p>View user login and activity history</p>
+    <!-- MODALS -->
+    
+    <!-- Logout Confirmation Modal -->
+    <div class="modal" id="logoutModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                🚪 Confirm Logout
+                <button class="modal-close" onclick="closeModal('logoutModal')">×</button>
             </div>
-
-            <div class="login-activity-card">
-                <h2><i class="fas fa-list"></i> Recent Login Activity</h2>
-                <div class="table-container">
-                    <table class="activity-table">
-                        <thead>
-                            <tr>
-                                <th>Username</th>
-                                <th>Full Name</th>
-                                <th>Role</th>
-                                <th>Login Time</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="loginActivityTable">
-                        </tbody>
-                    </table>
-                </div>
+            <div class="modal-body">
+                <p>Are you sure you want to logout?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('logoutModal')">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmLogout()">Logout</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal for editing entries -->
-    <!-- (the rest of your HTML is preserved; truncated here for brevity) -->
+    <!-- Delete Entry Confirmation Modal -->
+    <div class="modal" id="deleteEntryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                🗑️ Confirm Delete
+                <button class="modal-close" onclick="closeModal('deleteEntryModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this entry? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('deleteEntryModal')">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmDeleteEntry()">Delete</button>
+            </div>
+        </div>
+    </div>
 
-    <!-- FIREBASE SDK (compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <!-- Reset Counter Confirmation Modal -->
+    <div class="modal" id="resetCounterModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                🔢 Confirm Counter Reset
+                <button class="modal-close" onclick="closeModal('resetCounterModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to reset this counter? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('resetCounterModal')">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmResetCounter()">Reset Counter</button>
+            </div>
+        </div>
+    </div>
 
+    <!-- Success Modal -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                ✅ Success
+                <button class="modal-close" onclick="closeModal('successModal')">×</button>
+            </div>
+            <div class="modal-body" id="successMessage"></div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeModal('successModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Test Modal -->
+    <div class="modal" id="addTestModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                Add Test
+                <button class="modal-close" onclick="closeModal('addTestModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Test Type</label>
+                    <select id="additionalTestType" class="form-control" required>
+                        <option value="">Select Test</option>
+                        <option value="Small">Small</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Large">Large</option>
+                        <option value="Extra Large">Extra Large</option>
+                        <option value="IHC">IHC</option>
+                        <option value="Expert Opinion">Expert Opinion</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('addTestModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveAdditionalTest()">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Test to Patient Modal -->
+    <div class="modal" id="addTestToPatientModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                Add Test to Patient
+                <button class="modal-close" onclick="closeModal('addTestToPatientModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="patientEntryId">
+                <div class="form-group">
+                    <label class="form-label">Test Type</label>
+                    <select id="additionalTestTypeForPatient" class="form-control" required>
+                        <option value="">Select Test</option>
+                        <option value="Small">Small</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Large">Large</option>
+                        <option value="Extra Large">Extra Large</option>
+                        <option value="IHC">IHC</option>
+                        <option value="Expert Opinion">Expert Opinion</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('addTestToPatientModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveTestToPatient()">Add Test</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Markers Modal -->
+    <div class="modal" id="addMarkersModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                Add IHC Markers
+                <button class="modal-close" onclick="closeModal('addMarkersModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="selectIHCTest" value="">
+                <div class="form-group">
+                    <label class="form-label">Marker Date</label>
+                    <input type="date" id="ihcMarkerDate" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Search & Add Marker</label>
+                    <div style="display: flex; gap: 8px; align-items: flex-start;">
+                        <div style="flex: 1; position: relative;">
+                            <input type="text" id="ihcMarkerInput" class="form-control searchable-input" placeholder="Type to search markers..." autocomplete="off" aria-label="Search markers">
+                            <ul class="dropdown-list" id="ihcMarkerDropdown" style="max-height: 200px; overflow: auto;"></ul>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="addMarkerToList()">Add</button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="showAddMarkerModal()">➕ New</button>
+                    </div>
+                    <small style="color: var(--color-text-secondary); display: block; margin-top: 6px;">You can add the same marker multiple times if needed.</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Markers Added</label>
+                    <div id="ihcAddedMarkers" style="min-height: 60px; border: 1px solid var(--color-border); padding: 12px; border-radius: 8px; background: var(--color-surface); max-height: 300px; overflow: auto;">
+                        <p style="color: var(--color-text-secondary); text-align: center; padding: 10px;">No markers added yet</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('addMarkersModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveMarkers()">Save Markers</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Markers History Modal -->
+    <div class="modal" id="viewMarkersModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                📋 IHC Markers History
+                <button class="modal-close" onclick="closeModal('viewMarkersModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="viewMarkersPatientInfo" style="padding: 15px; background: rgba(33, 128, 141, 0.1); border-radius: 8px; margin-bottom: 20px;"></div>
+                <div id="viewMarkersContent"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('viewMarkersModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Hospital Modal -->
+    <div class="modal" id="addHospitalModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                Add New Hospital
+                <button class="modal-close" onclick="closeModal('addHospitalModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Hospital Name</label>
+                    <input type="text" id="newHospitalName" class="form-control" placeholder="Enter hospital name">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('addHospitalModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveNewHospital()">Add Hospital</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Doctor Modal -->
+    <div class="modal" id="addDoctorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                Add New Doctor
+                <button class="modal-close" onclick="closeModal('addDoctorModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Doctor Name</label>
+                    <input type="text" id="newDoctorName" class="form-control" placeholder="Enter doctor name">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('addDoctorModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveNewDoctor()">Add Doctor</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Marker Modal -->
+    <div class="modal" id="addMarkerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                Add New Marker
+                <button class="modal-close" onclick="closeModal('addMarkerModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Marker Name</label>
+                    <input type="text" id="newMarkerName" class="form-control" placeholder="Enter marker name">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('addMarkerModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveNewMarker()">Add Marker</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
     <script>
-      // Firebase config you provided (integrated directly)
-      const firebaseConfig = {
-        apiKey: "AIzaSyA5jzvTz9dM46u3OPxaXdpeT1dbmSqW_VA",
-        authDomain: "final-data-404f9.firebaseapp.com",
-        projectId: "final-data-404f9",
-        storageBucket: "final-data-404f9.firebasestorage.app",
-        messagingSenderId: "1067605574799",
-        appId: "1:1067605574799:web:68844a3d6a7d2a1587dcfa"
-      };
-
-      // Initialize Firebase & Firestore (compat)
-      firebase.initializeApp(firebaseConfig);
-      const db = firebase.firestore();
+        const firebaseConfig = {
+            apiKey: "AIzaSyDdDwNlsiHZDRU0V2QvzI1wdOZJsMUiQRo",
+            authDomain: "phoenix-v2-31551.firebaseapp.com",
+            projectId: "phoenix-v2-31551",
+            storageBucket: "phoenix-v2-31551.firebasestorage.app",
+            messagingSenderId: "332421431993",
+            appId: "1:332421431993:web:dea3ed570ce8baca27d168"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
     </script>
-
-    <!-- Your updated app.js (Firestore-enabled) -->
+    
     <script src="app.js"></script>
 </body>
 </html>
